@@ -1,0 +1,16 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="..\..\FrameXML\UI.xsd">
+    <Script File="XPMon.lua"/>
+    <Frame name="XPMonFrame"
+           toplevel="true"
+           frameStrata="BACKGROUND"
+           movable="true"
+           enableMouse="true"
+           hidden="false"
+           parent="UIParent">
+
+        <Scripts>
+            <OnLoad function="XPMon_onLoad"/>
+            <OnEvent function="XPMon_onEvent"/>
+        </Scripts>
+    </Frame>
+</Ui>

@@ -1,0 +1,8 @@
+## Interface: 50400
+## Title: XPMon
+## Notes: What did you do to gain all that XP? Find out with XPMon
+## Version: 0.0.1
+## SavedVariablesPerCharacter: XPMon_DATA
+
+XPMon.lua
+XPMon.xml
