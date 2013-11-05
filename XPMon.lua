@@ -121,7 +121,7 @@ function XPMon_onXPEvent(event, data)
         if value.events[event] ~= nil then
             XPMon.nextXPGain = value.handler(event, data);
         end
-        if XPMon_nextXPGainSpokenFor() then
+        if XPMon.nextXPGain ~= nil then
             break;
         end
     end
@@ -159,10 +159,6 @@ function XPMon_onPlayerXPUpdate(event, data)
     XPMon.nextXPGain = nil;
 end
 
-function XPMon_nextXPGainSpokenFor()
-    return XPMon.nextXPGain ~= nil
-end
-
 function XPMon_addXPEventforLevel(level, event)
     local source = event.source;
     event.source = nil;
@@ -192,8 +188,9 @@ function XPMon_log(...)
     end
 end
 
-
+--------------------
 -- Utility functions
+--------------------
 
 -- http://lua-users.org/wiki/CopyTable
 function XPMon_deepcopy(orig)
