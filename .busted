@@ -1,0 +1,13 @@
+return {
+    default = {
+        verbose = true,
+        ROOT = "tests/unit/",
+        pattern  = "test.lua$"
+    },
+    unit = {
+        verbose = false,
+        ROOT = "tests/unit/",
+        pattern = "test.lua$"
+    }
+
+}
