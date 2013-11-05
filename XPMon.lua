@@ -36,7 +36,13 @@ XPMon.filters = {
         state = {},
         events = { CHAT_MSG_COMBAT_XP_GAIN = true },
         handler = function(event, data)
-            return nil;
+            XPMon_log(event);
+            local mainPattern = "^(.+) dies, you gain ([%d]+) experience.";
+            local restedPattern = " %(%+([%d]+) exp Rested bonus%)$";
+            local s, e, creature, exp = data:find(mainPattern)
+            local s, e, rested = data:find(restedPattern)
+            XPMon_log("Match", creature, exp, rested);
+            return  ;
         end
     },
     XP_QUEST = {
