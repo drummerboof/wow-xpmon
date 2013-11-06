@@ -16,17 +16,19 @@ XPMon.XPEvents = {
 XPMon.otherEvents = {
     -- Listen to XP changes here and see if we have determined the cause
     PLAYER_XP_UPDATE = XPMon_onPlayerXPUpdate,
-    -- Load saved player XP data
+    -- Some initialisation here probably
     ADDON_LOADED = XPMon_onAddonLoaded,
+    -- PLayer logged in so we can get XP data
     PLAYER_LOGIN = XPMon_onPlayerLogin
 }
 
 XPMon.commands = {
     level = function(args)
-        local xp, level = XPMon.currentXP, args ~= "" and args or XPMon.currentLevel;
-        local data = XPMon_DATA[level];
+        local level = args ~= "" and args or XPMon.currentLevel;
+        local data = XPMon_DATA[tonumber(level)];
 
         if data then
+            local xp = level == UnitLevel("player") and XPMon.currentXP or data.max;
             print("|cffa0e0faXPMon: stats for level " .. level);
             for type, stats in pairs(data.data) do
                 print("|cffa0e0fa    ", type .. ":", stats.total, "(" .. string.format("%.1f", (stats.total / xp * 100)) .. "%)");
@@ -35,7 +37,7 @@ XPMon.commands = {
                 print("|cffc9d3d6    ", "Uncaptured XP:", xp - data.total, "(" .. string.format("%.1f", ((xp - data.total) / xp * 100)) .. "%)");
             end
         else
-            print("|cffcc0000XPMon: no XP data found for level", level);
+            print("|cffcc0000XPMon: no XP data found for level '" .. level .."'");
         end
     end,
     total = function()
@@ -71,25 +73,22 @@ function XPMon_onPlayerLogin(event)
 end
 
 function XPMon_onEvent(self, event, ...)
+
     -- XP related event here
     if XPMon.XPEvents[event] ~= nil then
-        XPMon_onXPEvent(event, ...);
+        for key, value in pairs(XPMon.filters) do
+            if value.events[event] ~= nil then
+                XPMon.nextXPGain = value.handler(event, ...);
+            end
+            if XPMon.nextXPGain ~= nil then
+                break;
+            end
+        end
 
-        -- Other events
+    -- Other events
     else
         if XPMon.otherEvents[event] ~= nil then
             XPMon.otherEvents[event](event, ...)
-        end
-    end
-end
-
-function XPMon_onXPEvent(event, data)
-    for key, value in pairs(XPMon.filters) do
-        if value.events[event] ~= nil then
-            XPMon.nextXPGain = value.handler(event, data);
-        end
-        if XPMon.nextXPGain ~= nil then
-            break;
         end
     end
 end
@@ -134,6 +133,7 @@ function XPMon_addXPEventforLevel(level, event)
     if XPMon_DATA[level] == nil then
         XPMon_DATA[level] = {
             total = 0,
+            max = UnitXPMax("player"),
             data = {}
         };
     end
