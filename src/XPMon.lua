@@ -169,8 +169,8 @@ function SlashCmdList.XPMON(str, editBox)
     end
     if (command == "") then
         print("|cffffff00XPMon: usage|r")
-        print("|cffffff00    /xpmon level - show XP information for the given level or the current level if none given|r");
-        print("|cffffff00    /xpmon total - show total XP information for all levels|r");
+        print("|cffffff00    /xpmon level|r show XP information for the given level or the current level if none given");
+        print("|cffffff00    /xpmon total|r show total XP information for all levels");
         return;
     end
     if (XPMon.commands[command]) then
