@@ -1,4 +1,6 @@
 XPMon = XPMon or {};
+SlashCmdList = SlashCmdList or {};
+SLASH_XPMON1 = '/xpmon';
 
 XPMon.nextXPGain = nil;
 XPMon.currentXP = nil;
@@ -16,8 +18,29 @@ XPMon.otherEvents = {
     PLAYER_XP_UPDATE = XPMon_onPlayerXPUpdate,
     -- Load saved player XP data
     ADDON_LOADED = XPMon_onAddonLoaded,
-
     PLAYER_LOGIN = XPMon_onPlayerLogin
+}
+
+XPMon.commands = {
+    level = function(args)
+        local xp, level = XPMon.currentXP, args ~= "" and args or XPMon.currentLevel;
+        local data = XPMon_DATA[level];
+
+        if data then
+            print("|cffa0e0faXPMon: stats for level " .. level);
+            for type, stats in pairs(data.data) do
+                print("|cffa0e0fa    ", type .. ":", stats.total, "(" .. string.format("%.1f", (stats.total / xp * 100)) .. "%)");
+            end
+            if data.total < xp then
+                print("|cffc9d3d6    ", "Uncaptured XP:", xp - data.total, "(" .. string.format("%.1f", ((xp - data.total) / xp * 100)) .. "%)");
+            end
+        else
+            print("|cffcc0000XPMon: no XP data found for level", level);
+        end
+    end,
+    total = function()
+        print("|cffcc0000XPMon: coming soon...|r");
+    end,
 }
 
 function XPMon_onLoad(self)
@@ -71,7 +94,7 @@ function XPMon_onXPEvent(event, data)
     end
 end
 
-function XPMon_onPlayerXPUpdate(event, data)
+function XPMon_onPlayerXPUpdate()
     -- Maybe check that the xpEvent we have registered didn't happen too long ago,
     -- or alternatively, clear out the nextXPGain variable after a timeout
 
@@ -103,7 +126,6 @@ function XPMon_onPlayerXPUpdate(event, data)
     XPMon_addXPEventforLevel(UnitLevel("player"), xpEventCurrentLevel);
 
     XPMon_setCurrentPlayerInfo();
-    XPMon.nextXPGain = nil;
 end
 
 function XPMon_addXPEventforLevel(level, event)
@@ -112,25 +134,48 @@ function XPMon_addXPEventforLevel(level, event)
     if XPMon_DATA[level] == nil then
         XPMon_DATA[level] = {
             total = 0,
+            data = {}
+        };
+    end
+    if XPMon_DATA[level].data[source] == nil then
+        XPMon_DATA[level].data[source] = {
+            total = 0,
             events = {}
         };
     end
-    if XPMon_DATA[level].events[source] == nil then
-        XPMon_DATA[level].events[source] = {};
-    end
-    table.insert(XPMon_DATA[level].events[source], event);
+    table.insert(XPMon_DATA[level].data[source].events, event);
     XPMon_DATA[level].total = XPMon_DATA[level].total + event.experience;
+    XPMon_DATA[level].data[source].total = XPMon_DATA[level].data[source].total + event.experience;
 end
 
 function XPMon_setCurrentPlayerInfo()
     XPMon.currentXP = UnitXP("player");
     XPMon.currentXPRemaining = UnitXPMax("player") - XPMon.currentXP;
     XPMon.currentLevel = UnitLevel("player");
+    XPMon.nextXPGain = nil;
     XPMon_log("Setting player info", XPMon.currentXP, XPMon.currentXPRemaining);
 end
 
 function XPMon_log(...)
     if XPMON_DEBUG == true then
         print("XPMon_log: ", ...);
+    end
+end
+
+function SlashCmdList.XPMON(str, editBox)
+    local command, args, s, e = str, nil;
+    if command:find(" ") then
+        s, e, command, args = str:find("^([%a]+) ([%a%d%s]+)$");
+    end
+    if (command == "") then
+        print("|cffffff00XPMon: usage|r")
+        print("|cffffff00    /xpmon level - show XP information for the given level or the current level if none given|r");
+        print("|cffffff00    /xpmon total - show total XP information for all levels|r");
+        return;
+    end
+    if (XPMon.commands[command]) then
+        XPMon.commands[command](args);
+    else
+        print("|cffcc0000XPMon: invalid command,", command);
     end
 end

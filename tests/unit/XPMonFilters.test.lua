@@ -13,7 +13,7 @@ describe("XPMon Filters", function ()
 
         it("Captures mob kill info for non rested kills", function ()
             local result = XPMon.filters.XP_MOB_KILL.handler("CHAT_MSG_COMBAT_XP_GAIN", "Boof dies, you gain 100 experience.");
-            assert.are.equal(result.source, "MOB KILL")
+            assert.are.equal(result.source, XPMON_SOURCE_KILL)
             assert.are.equal(result.rested, 0)
             assert.are.equal(result.details.mob, "Boof")
         end);
