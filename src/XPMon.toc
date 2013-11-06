@@ -4,5 +4,8 @@
 ## Version: 0.0.1
 ## SavedVariablesPerCharacter: XPMon_DATA, XPMon_USER_CONFIG
 
+XPMonVars.lua
+XPMonUtils.lua
+XPMonFilters.lua
 XPMon.lua
 XPMon.xml

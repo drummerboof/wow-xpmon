@@ -1,22 +1,9 @@
--- XPMon saved data
-XPMon_DATA = {};
-XPMon_USER_CONFIG = {};
-
-XPMon = {};
-XPMon.DEBUG = true;
-XPMon.NAME = "XPMon";
-XPMon.XP_EVENT = {
-    source = "Unknown",
-    amount = 0,
-    rested = 0,
-    details = {}
-}
+XPMon = XPMon or {};
 
 XPMon.nextXPGain = nil;
 XPMon.currentXP = nil;
 XPMon.currentXPRemaining = nil;
 XPMon.currentLevel = nil;
-
 XPMon.XPEvents = {
     CHAT_MSG_SYSTEM = true,
     CHAT_MSG_COMBAT_XP_GAIN = true,
@@ -29,59 +16,9 @@ XPMon.otherEvents = {
     PLAYER_XP_UPDATE = XPMon_onPlayerXPUpdate,
     -- Load saved player XP data
     ADDON_LOADED = XPMon_onAddonLoaded,
+
+    PLAYER_LOGIN = XPMon_onPlayerLogin
 }
-
-XPMon.filters = {
-    XP_MOB_KILL = {
-        state = {},
-        events = { CHAT_MSG_COMBAT_XP_GAIN = true },
-        handler = function(event, data)
-            XPMon_log(event);
-            local mainPattern = "^(.+) dies, you gain ([%d]+) experience.";
-            local restedPattern = " %(%+([%d]+) exp Rested bonus%)$";
-            local s, e, creature, exp = data:find(mainPattern)
-            local s, e, rested = data:find(restedPattern)
-            XPMon_log("Match", creature, exp, rested);
-            return  ;
-        end
-    },
-    XP_QUEST = {
-        state = {},
-        events = { CHAT_MSG_SYSTEM = true },
-        handler = function(event, data)
-            return nil;
-        end
-    },
-    XP_PROFESSION = {
-        state = {},
-        events = { CHAT_MSG_OPENING = true },
-        handler = function(event, data)
-            return nil;
-        end
-    },
-    XP_EXPLORATION = {
-        state = {},
-        events = { CHAT_MSG_SYSTEM = true },
-        handler = function(event, data)
-            return nil;
-        end
-    },
-    XP_DUNGEON_FINDER = {
-        state = {},
-        events = { LFG_COMPLETION_REWARD = true },
-        handler = function(event, data)
-            return nil;
-        end
-    },
-    XP_BATTLEGROUND = {
-        state = {},
-        events = {},
-        handler = function(event, data)
-            return nil;
-        end
-    },
-};
-
 
 function XPMon_onLoad(self)
 
@@ -97,16 +34,17 @@ function XPMon_onLoad(self)
         self:RegisterEvent(key);
     end
 
-    XPMon_DATA = { foo = "barboof" }
-
     XPMon_log("XPMon_onLoad");
 end
 
 function XPMon_onAddonLoaded(event, addon)
-    if addon == XPMon.NAME then
+    if addon == XPMON_NAME then
         XPMon_log("XPMon_onAddonLoaded", addon);
-        XPMon_setCurrentPlayerInfo();
     end
+end
+
+function XPMon_onPlayerLogin(event)
+    XPMon_setCurrentPlayerInfo();
 end
 
 function XPMon_onEvent(self, event, ...)
@@ -134,31 +72,34 @@ function XPMon_onXPEvent(event, data)
 end
 
 function XPMon_onPlayerXPUpdate(event, data)
+    -- Maybe check that the xpEvent we have registered didn't happen too long ago,
+    -- or alternatively, clear out the nextXPGain variable after a timeout
+
     XPMon_log("Player XP update!");
 
     local xpEventPrevLevel, xpEventCurrentLevel;
 
-    xpEventCurrentLevel = XPMon_deepcopy(XPMon.nextXPGain or XPMon.XP_EVENT);
+    xpEventCurrentLevel = XPMon_deepcopy(XPMon.nextXPGain or XPMON_XP_EVENT_DEFAULT);
 
     XPMon_log(" - remaining XP:", XPMon.currentXPRemaining);
 
     if UnitLevel("player") > XPMon.currentLevel then
-        xpEventPrevLevel = XPMon_deepcopy(XPMon.nextXPGain or XPMon.XP_EVENT);
-        xpEventPrevLevel.amount = XPMon.currentXPRemaining;
-        xpEventCurrentLevel.amount = UnitXP("player");
+        xpEventPrevLevel = XPMon_deepcopy(XPMon.nextXPGain or XPMON_XP_EVENT_DEFAULT);
+        xpEventPrevLevel.experience = XPMon.currentXPRemaining;
+        xpEventCurrentLevel.experience = UnitXP("player");
 
         if xpEventCurrentLevel.rested > 0 then
-            xpEventPrevLevel.rested = math.max(0, xpEventPrevLevel.amount - xpEventPrevLevel.rested);
+            xpEventPrevLevel.rested = math.max(0, xpEventPrevLevel.experience - xpEventPrevLevel.rested);
             xpEventCurrentLevel.rested = xpEventCurrentLevel.rested - xpEventPrevLevel.rested;
         end
 
-        XPMon_log("Saving XP event for previous level: ", xpEventPrevLevel.source, xpEventPrevLevel.amount, xpEventPrevLevel.rested);
+        XPMon_log("Saving XP event for previous level: ", xpEventPrevLevel.source, xpEventPrevLevel.experience, xpEventPrevLevel.rested);
         XPMon_addXPEventforLevel(XPMon.currentLevel, xpEventPrevLevel);
     else
-        xpEventCurrentLevel.amount = UnitXP("player") - XPMon.currentXP;
+        xpEventCurrentLevel.experience = UnitXP("player") - XPMon.currentXP;
     end
 
-    XPMon_log("Saving XP event for current level: ", xpEventCurrentLevel.source, xpEventCurrentLevel.amount, xpEventCurrentLevel.rested);
+    XPMon_log("Saving XP event for current level: ", xpEventCurrentLevel.source, xpEventCurrentLevel.experience, xpEventCurrentLevel.rested);
     XPMon_addXPEventforLevel(UnitLevel("player"), xpEventCurrentLevel);
 
     XPMon_setCurrentPlayerInfo();
@@ -178,38 +119,18 @@ function XPMon_addXPEventforLevel(level, event)
         XPMon_DATA[level].events[source] = {};
     end
     table.insert(XPMon_DATA[level].events[source], event);
-    XPMon_DATA[level].total = XPMon_DATA[level].total + event.amount;
+    XPMon_DATA[level].total = XPMon_DATA[level].total + event.experience;
 end
 
 function XPMon_setCurrentPlayerInfo()
     XPMon.currentXP = UnitXP("player");
     XPMon.currentXPRemaining = UnitXPMax("player") - XPMon.currentXP;
     XPMon.currentLevel = UnitLevel("player");
-    XPMon_log(XPMon.currentXP, XPMon.currentXPRemaining);
+    XPMon_log("Setting player info", XPMon.currentXP, XPMon.currentXPRemaining);
 end
 
 function XPMon_log(...)
-    if XPMon.DEBUG == true then
+    if XPMON_DEBUG == true then
         print("XPMon_log: ", ...);
     end
-end
-
---------------------
--- Utility functions
---------------------
-
--- http://lua-users.org/wiki/CopyTable
-function XPMon_deepcopy(orig)
-    local orig_type = type(orig)
-    local copy
-    if orig_type == 'table' then
-        copy = {}
-        for orig_key, orig_value in next, orig, nil do
-            copy[XPMon_deepcopy(orig_key)] = XPMon_deepcopy(orig_value)
-        end
-        setmetatable(copy, XPMon_deepcopy(getmetatable(orig)))
-    else -- number, string, boolean, etc
-        copy = orig
-    end
-    return copy
 end

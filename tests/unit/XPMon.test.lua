@@ -1,10 +1,14 @@
 package.path = package.path .. ";../../?.lua";
+require("XPMonVars");
+require("XPMonUtils");
+require("XPMonFilters");
 require("XPMon");
+
 
 describe("XPMon Addon", function ()
     
-    setup(function () 
-        XPMon.DEBUG = false;    
+    setup(function ()
+        XPMON_DEBUG = false;
     end);
 
     describe("XPMon_onLoad", function () 
