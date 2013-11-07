@@ -1,4 +1,4 @@
-XPMon = XPMon or {};
+XPMon = XPMon or {}
 
 XPMon.filters = {
 
@@ -6,7 +6,7 @@ XPMon.filters = {
         state = {},
         events = { CHAT_MSG_COMBAT_XP_GAIN = true },
         handler = function(event, data)
-            local result;
+            local result
             local s, e, mob, exp = data:find("^(.+) dies, you gain ([%d]+) experience.")
             if mob and exp then
                 local s, e, rested = data:find(" %(%+([%d]+) exp Rested bonus%)$")
@@ -16,9 +16,9 @@ XPMon.filters = {
                     details = {
                         mob = mob
                     }
-                };
+                }
             end
-            return result;
+            return result
         end
     },
 
@@ -26,7 +26,7 @@ XPMon.filters = {
         state = {},
         events = { CHAT_MSG_SYSTEM = true },
         handler = function(event, data)
-            local result;
+            local result
             local s, e, quest = data:find("^(.+) completed.")
             if quest then
                 result = {
@@ -35,9 +35,9 @@ XPMon.filters = {
                     details = {
                         quest = quest
                     }
-                };
+                }
             end
-            return result;
+            return result
         end
     },
 
@@ -45,7 +45,7 @@ XPMon.filters = {
         state = {},
         events = { CHAT_MSG_OPENING = true },
         handler = function(event, data)
-            local result;
+            local result
             local s, e, profession, material = data:find("^You perform (.+) on (.+).$")
             if profession and material then
                 result = {
@@ -55,9 +55,9 @@ XPMon.filters = {
                         profession = profession,
                         material = material
                     }
-                };
+                }
             end
-            return result;
+            return result
         end
     },
 
@@ -65,7 +65,7 @@ XPMon.filters = {
         state = {},
         events = { CHAT_MSG_SYSTEM = true },
         handler = function(event, data)
-            local result;
+            local result
             local s, e, place, exp = data:find("^Discovered (.+): ([%d]+) experience gained$")
             if place and exp then
                 result = {
@@ -74,9 +74,9 @@ XPMon.filters = {
                     details = {
                         place = place
                     }
-                };
+                }
             end
-            return result;
+            return result
         end
     },
 
@@ -84,7 +84,7 @@ XPMon.filters = {
         state = {},
         events = { LFG_COMPLETION_REWARD = true },
         handler = function(event, data)
-            return nil;
+            return nil
         end
     },
 
@@ -92,7 +92,7 @@ XPMon.filters = {
         state = {},
         events = {},
         handler = function(event, data)
-            return nil;
+            return nil
         end
     },
 
@@ -100,7 +100,7 @@ XPMon.filters = {
         state = {},
         events = {},
         handler = function(event, data)
-            return nil;
+            return nil
         end
     }
-};
+}
