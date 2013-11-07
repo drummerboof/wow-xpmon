@@ -31,6 +31,7 @@ XPMon.filters = {
             if quest then
                 result = {
                     source = XPMON_SOURCE_QUEST,
+                    rested = 0,
                     details = {
                         quest = quest
                     }
@@ -49,6 +50,7 @@ XPMon.filters = {
             if profession and material then
                 result = {
                     source = XPMON_SOURCE_PROFESSION,
+                    rested = 0,
                     details = {
                         profession = profession,
                         material = material
@@ -68,6 +70,7 @@ XPMon.filters = {
             if place and exp then
                 result = {
                     source = XPMON_SOURCE_EXPLORATION,
+                    rested = 0,
                     details = {
                         place = place
                     }
