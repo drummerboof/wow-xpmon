@@ -1,5 +1,4 @@
 package.path = package.path .. "../../?.lua"
-require("XPMonVars")
 require("XPMonUtils")
 require("XPMonFilters")
 require("XPMon")

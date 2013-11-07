@@ -1,5 +1,13 @@
 XPMon = XPMon or {}
 
+XPMon.SOURCE_KILL = "Mob Kills"
+XPMon.SOURCE_QUEST = "Quests"
+XPMon.SOURCE_DUNGEON = "Looking for Dungeon"
+XPMon.SOURCE_PROFESSION = "Professions"
+XPMon.SOURCE_PET_BATTLE = "Pet Battles"
+XPMon.SOURCE_EXPLORATION = "Exploration"
+XPMon.SOURCE_BATTLEGROUND = "Battlegrounds"
+
 XPMon.filters = {
 
     XP_MOB_KILL = {
@@ -11,7 +19,7 @@ XPMon.filters = {
             if mob and exp then
                 local s, e, rested = data:find(" %(%+([%d]+) exp Rested bonus%)$")
                 result = {
-                    source = XPMON_SOURCE_KILL,
+                    source = XPMon.SOURCE_KILL,
                     rested = tonumber(rested or 0),
                     details = {
                         mob = mob
@@ -30,7 +38,7 @@ XPMon.filters = {
             local s, e, quest = data:find("^(.+) completed.")
             if quest then
                 result = {
-                    source = XPMON_SOURCE_QUEST,
+                    source = XPMon.SOURCE_QUEST,
                     rested = 0,
                     details = {
                         quest = quest
@@ -49,7 +57,7 @@ XPMon.filters = {
             local s, e, profession, material = data:find("^You perform (.+) on (.+).$")
             if profession and material then
                 result = {
-                    source = XPMON_SOURCE_PROFESSION,
+                    source = XPMon.SOURCE_PROFESSION,
                     rested = 0,
                     details = {
                         profession = profession,
@@ -69,7 +77,7 @@ XPMon.filters = {
             local s, e, place, exp = data:find("^Discovered (.+): ([%d]+) experience gained$")
             if place and exp then
                 result = {
-                    source = XPMON_SOURCE_EXPLORATION,
+                    source = XPMon.SOURCE_EXPLORATION,
                     rested = 0,
                     details = {
                         place = place

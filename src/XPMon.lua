@@ -5,6 +5,16 @@ SlashCmdList = SlashCmdList or {}
 ------------------------------------------------------
 
 XPMon = XPMon or {}
+
+XPMon.DEBUG = false
+XPMon.NAME = "XPMon"
+XPMon.XP_EVENT_DEFAULT = {
+    source = "Unknown",
+    experience = 0,
+    rested = 0,
+    details = {}
+};
+
 XPMon.nextXPGain = nil
 XPMon.currentXP = nil
 XPMon.currentXPRemaining = nil
@@ -44,7 +54,7 @@ function XPMon:onLoad(addon)
 end
 
 function XPMon:onAddonLoaded(event, addon)
-    if addon == XPMON_NAME then
+    if addon == self.NAME then
         self:log("XPMon:onAddonLoaded", addon)
     end
 end
@@ -82,12 +92,12 @@ function XPMon:onPlayerXPUpdate()
 
     local xpEventPrevLevel, xpEventCurrentLevel
 
-    xpEventCurrentLevel = XPMon_deepcopy(self.nextXPGain or XPMON_XP_EVENT_DEFAULT)
+    xpEventCurrentLevel = XPMonUtil.deepcopy(self.nextXPGain or self.XP_EVENT_DEFAULT)
 
     self:log(" - remaining XP:", self.currentXPRemaining)
 
     if UnitLevel("player") > self.currentLevel then
-        xpEventPrevLevel = XPMon_deepcopy(self.nextXPGain or XPMON_XP_EVENT_DEFAULT)
+        xpEventPrevLevel = XPMonUtil.deepcopy(self.nextXPGain or self.XP_EVENT_DEFAULT)
         xpEventPrevLevel.experience = self.currentXPRemaining
         xpEventCurrentLevel.experience = UnitXP("player")
 
@@ -138,14 +148,14 @@ function XPMon:setCurrentPlayerInfo()
 end
 
 function XPMon:log(...)
-    if XPMON_DEBUG == true then
+    if self.DEBUG == true then
         print("XPMon:log: ", ...)
     end
 end
 
 function XPMon:commandLevel(args)
     local totals = {}
-    local level = args ~= "" and args or XPMon.currentLevel
+    local level = args ~= "" and args or self.currentLevel
     local data = XPMon_DATA[tonumber(level)]
 
     if data then
@@ -159,7 +169,7 @@ function XPMon:commandLevel(args)
             return a.total > b.total
         end)
 
-        local xp = level == UnitLevel("player") and XPMon.currentXP or data.max
+        local xp = level == UnitLevel("player") and self.currentXP or data.max
         print("|cffffff00XPMon: stats for level " .. level)
         for i, item in pairs(totals) do
             print("|cff1BB8F7    ", item.type .. ":", item.total, "(" .. string.format("%.1f", (item.total / xp * 100)) .. "%)")
@@ -178,11 +188,17 @@ function XPMon:commandTotal()
 end
 
 ------------------------------------------------------
--- WOW Addon Globals
+-- WOW Global Stuff
 ------------------------------------------------------
 
+-- Slash commands
 SLASH_XPMON1 = '/xpmon'
 
+-- XPMon saved data
+XPMon_DATA = {}
+XPMon_USER_CONFIG = {}
+
+-- Slash command handler
 function SlashCmdList.XPMON(str, editBox)
     local command, args, s, e = str, nil
     if command:find(" ") then
