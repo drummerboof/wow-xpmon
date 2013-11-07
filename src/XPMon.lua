@@ -68,7 +68,6 @@ function XPMon:onEvent(addon, event, ...)
     if self.XPEvents[event] ~= nil then
         for key, value in pairs(self.filters) do
             if value.events[event] ~= nil then
-                self:log("calling filter", addon, key, event, ...)
                 self.nextXPGain = value.handler(event, ...)
             end
             if self.nextXPGain ~= nil then
@@ -93,11 +92,13 @@ function XPMon:onPlayerXPUpdate()
     local xpEventPrevLevel, xpEventCurrentLevel
 
     xpEventCurrentLevel = XPMonUtil.deepcopy(self.nextXPGain or self.XP_EVENT_DEFAULT)
+    xpEventCurrentLevel.rested = xpEventCurrentLevel.rested or 0
 
     self:log(" - remaining XP:", self.currentXPRemaining)
 
     if UnitLevel("player") > self.currentLevel then
         xpEventPrevLevel = XPMonUtil.deepcopy(self.nextXPGain or self.XP_EVENT_DEFAULT)
+        xpEventPrevLevel.rested = xpEventPrevLevel.rested or 0
         xpEventPrevLevel.experience = self.currentXPRemaining
         xpEventCurrentLevel.experience = UnitXP("player")
 
@@ -107,18 +108,18 @@ function XPMon:onPlayerXPUpdate()
         end
 
         XPMon:log("Saving XP event for previous level: ", xpEventPrevLevel.source, xpEventPrevLevel.experience, xpEventPrevLevel.rested)
-        XPMon:addXPEventforLevel(self.currentLevel, xpEventPrevLevel)
+        XPMon:addXPEventForLevel(self.currentLevel, xpEventPrevLevel)
     else
         xpEventCurrentLevel.experience = UnitXP("player") - self.currentXP
     end
 
     XPMon:log("Saving XP event for current level: ", xpEventCurrentLevel.source, xpEventCurrentLevel.experience, xpEventCurrentLevel.rested)
-    XPMon:addXPEventforLevel(UnitLevel("player"), xpEventCurrentLevel)
+    XPMon:addXPEventForLevel(UnitLevel("player"), xpEventCurrentLevel)
 
     XPMon:setCurrentPlayerInfo()
 end
 
-function XPMon:addXPEventforLevel(level, event)
+function XPMon:addXPEventForLevel(level, event)
     local source = event.source
     event.source = nil
     if XPMon_DATA[level] == nil then
