@@ -1,7 +1,10 @@
-XPMon = XPMon or {};
 SlashCmdList = SlashCmdList or {};
-SLASH_XPMON1 = '/xpmon';
 
+------------------------------------------------------
+-- XPMon Addon Instance
+------------------------------------------------------
+
+XPMon = XPMon or {};
 XPMon.nextXPGain = nil;
 XPMon.currentXP = nil;
 XPMon.currentXPRemaining = nil;
@@ -12,102 +15,80 @@ XPMon.XPEvents = {
     CHAT_MSG_OPENING = true,
     LFG_COMPLETION_REWARD = true
 };
-
 XPMon.otherEvents = {
-    -- Listen to XP changes here and see if we have determined the cause
-    PLAYER_XP_UPDATE = XPMon_onPlayerXPUpdate,
-    -- Some initialisation here probably
-    ADDON_LOADED = XPMon_onAddonLoaded,
-    -- PLayer logged in so we can get XP data
-    PLAYER_LOGIN = XPMon_onPlayerLogin
+    PLAYER_XP_UPDATE = "onPlayerXPUpdate",
+    ADDON_LOADED = "onAddonLoaded",
+    PLAYER_LOGIN = "onPlayerLogin"
 }
 
 XPMon.commands = {
-    level = function(args)
-        local level = args ~= "" and args or XPMon.currentLevel;
-        local data = XPMon_DATA[tonumber(level)];
-
-        if data then
-            local xp = level == UnitLevel("player") and XPMon.currentXP or data.max;
-            print("|cffa0e0faXPMon: stats for level " .. level);
-            for type, stats in pairs(data.data) do
-                print("|cffa0e0fa    ", type .. ":", stats.total, "(" .. string.format("%.1f", (stats.total / xp * 100)) .. "%)");
-            end
-            if data.total < xp then
-                print("|cffc9d3d6    ", "Uncaptured XP:", xp - data.total, "(" .. string.format("%.1f", ((xp - data.total) / xp * 100)) .. "%)");
-            end
-        else
-            print("|cffcc0000XPMon: no XP data found for level '" .. level .."'");
-        end
-    end,
-    total = function()
-        print("|cffcc0000XPMon: coming soon...|r");
-    end,
+    level = "commandLevel",
+    total = "commadTotal"
 }
 
-function XPMon_onLoad(self)
+function XPMon:onLoad(addon)
 
     -- XP related events to listen to
-    for key, value in pairs(XPMon.XPEvents) do
-        XPMon_log("regestering", key)
-        self:RegisterEvent(key);
+    for key, value in pairs(self.XPEvents) do
+        self:log("regestering", key)
+        addon:RegisterEvent(key);
     end
 
     -- Other events to listen to
-    for key, value in pairs(XPMon.otherEvents) do
-        XPMon_log("regestering", key)
-        self:RegisterEvent(key);
+    for key, value in pairs(self.otherEvents) do
+        self:log("regestering", key)
+        addon:RegisterEvent(key);
     end
 
-    XPMon_log("XPMon_onLoad");
+    XPMon:log("XPMon:onLoad");
 end
 
-function XPMon_onAddonLoaded(event, addon)
+function XPMon:onAddonLoaded(event, addon)
     if addon == XPMON_NAME then
-        XPMon_log("XPMon_onAddonLoaded", addon);
+        self:log("XPMon:onAddonLoaded", addon);
     end
 end
 
-function XPMon_onPlayerLogin(event)
-    XPMon_setCurrentPlayerInfo();
+function XPMon:onPlayerLogin(event)
+    self:setCurrentPlayerInfo();
 end
 
-function XPMon_onEvent(self, event, ...)
-
+function XPMon:onEvent(addon, event, ...)
     -- XP related event here
-    if XPMon.XPEvents[event] ~= nil then
-        for key, value in pairs(XPMon.filters) do
+    if self.XPEvents[event] ~= nil then
+        for key, value in pairs(self.filters) do
             if value.events[event] ~= nil then
-                XPMon.nextXPGain = value.handler(event, ...);
+                self:log("calling filter", addon, key, event, ...)
+                self.nextXPGain = value.handler(event, ...);
             end
-            if XPMon.nextXPGain ~= nil then
+            if self.nextXPGain ~= nil then
                 break;
             end
         end
 
     -- Other events
     else
-        if XPMon.otherEvents[event] ~= nil then
-            XPMon.otherEvents[event](event, ...)
+        if self.otherEvents[event] ~= nil then
+            self[self.otherEvents[event]](self, event, ...)
         end
     end
 end
 
-function XPMon_onPlayerXPUpdate()
+function XPMon:onPlayerXPUpdate()
     -- Maybe check that the xpEvent we have registered didn't happen too long ago,
     -- or alternatively, clear out the nextXPGain variable after a timeout
 
-    XPMon_log("Player XP update!");
+    self:log("Player XP update!");
 
     local xpEventPrevLevel, xpEventCurrentLevel;
 
-    xpEventCurrentLevel = XPMon_deepcopy(XPMon.nextXPGain or XPMON_XP_EVENT_DEFAULT);
+    xpEventCurrentLevel = XPMon_deepcopy(self.nextXPGain or XPMON_XP_EVENT_DEFAULT);
 
-    XPMon_log(" - remaining XP:", XPMon.currentXPRemaining);
+    self:log(" - remaining XP:", self.currentXPRemaining);
 
-    if UnitLevel("player") > XPMon.currentLevel then
-        xpEventPrevLevel = XPMon_deepcopy(XPMon.nextXPGain or XPMON_XP_EVENT_DEFAULT);
-        xpEventPrevLevel.experience = XPMon.currentXPRemaining;
+    if UnitLevel("player") > self.currentLevel then
+        xpEventPrevLevel = XPMon_deepcopy(self.nextXPGain or XPMON_XP_EVENT_DEFAULT);
+        xpEventPrevLevel.experience = self.currentXPRemaining;
         xpEventCurrentLevel.experience = UnitXP("player");
 
         if xpEventCurrentLevel.rested > 0 then
@@ -115,19 +96,19 @@ function XPMon_onPlayerXPUpdate()
             xpEventCurrentLevel.rested = xpEventCurrentLevel.rested - xpEventPrevLevel.rested;
         end
 
-        XPMon_log("Saving XP event for previous level: ", xpEventPrevLevel.source, xpEventPrevLevel.experience, xpEventPrevLevel.rested);
-        XPMon_addXPEventforLevel(XPMon.currentLevel, xpEventPrevLevel);
+        XPMon:log("Saving XP event for previous level: ", xpEventPrevLevel.source, xpEventPrevLevel.experience, xpEventPrevLevel.rested);
+        XPMon:addXPEventforLevel(self.currentLevel, xpEventPrevLevel);
     else
-        xpEventCurrentLevel.experience = UnitXP("player") - XPMon.currentXP;
+        xpEventCurrentLevel.experience = UnitXP("player") - self.currentXP;
     end
 
-    XPMon_log("Saving XP event for current level: ", xpEventCurrentLevel.source, xpEventCurrentLevel.experience, xpEventCurrentLevel.rested);
-    XPMon_addXPEventforLevel(UnitLevel("player"), xpEventCurrentLevel);
+    XPMon:log("Saving XP event for current level: ", xpEventCurrentLevel.source, xpEventCurrentLevel.experience, xpEventCurrentLevel.rested);
+    XPMon:addXPEventforLevel(UnitLevel("player"), xpEventCurrentLevel);
 
-    XPMon_setCurrentPlayerInfo();
+    XPMon:setCurrentPlayerInfo();
 end
 
-function XPMon_addXPEventforLevel(level, event)
+function XPMon:addXPEventforLevel(level, event)
     local source = event.source;
     event.source = nil;
     if XPMon_DATA[level] == nil then
@@ -148,19 +129,59 @@ function XPMon_addXPEventforLevel(level, event)
     XPMon_DATA[level].data[source].total = XPMon_DATA[level].data[source].total + event.experience;
 end
 
-function XPMon_setCurrentPlayerInfo()
-    XPMon.currentXP = UnitXP("player");
-    XPMon.currentXPRemaining = UnitXPMax("player") - XPMon.currentXP;
-    XPMon.currentLevel = UnitLevel("player");
-    XPMon.nextXPGain = nil;
-    XPMon_log("Setting player info", XPMon.currentXP, XPMon.currentXPRemaining);
+function XPMon:setCurrentPlayerInfo()
+    self.currentXP = UnitXP("player");
+    self.currentXPRemaining = UnitXPMax("player") - self.currentXP;
+    self.currentLevel = UnitLevel("player");
+    self.nextXPGain = nil;
+    self:log("Setting player info", self.currentXP, self.currentXPRemaining);
 end
 
-function XPMon_log(...)
+function XPMon:log(...)
     if XPMON_DEBUG == true then
-        print("XPMon_log: ", ...);
+        print("XPMon:log: ", ...);
     end
 end
+
+function XPMon:commandLevel(args)
+    local totals = {};
+    local level = args ~= "" and args or XPMon.currentLevel;
+    local data = XPMon_DATA[tonumber(level)];
+
+    if data then
+        for type, stats in pairs(data.data) do
+            table.insert(totals, {
+                type = type,
+                total = stats.total
+            });
+        end
+        table.sort(totals, function (a, b)
+            return a.total > b.total;
+        end);
+
+        local xp = level == UnitLevel("player") and XPMon.currentXP or data.max;
+        print("|cffffff00XPMon: stats for level " .. level);
+        for i, item in pairs(totals) do
+            print("|cff1BB8F7    ", item.type .. ":", item.total, "(" .. string.format("%.1f", (item.total / xp * 100)) .. "%)");
+        end
+        if data.total < xp then
+            print("|cffB3C2C7    ", "Uncaptured:", xp - data.total, "(" .. string.format("%.1f", ((xp - data.total) / xp * 100)) .. "%)");
+        end
+        print("|cff1BB8F7    ", "Total:", xp);
+    else
+        print("|cffcc0000XPMon: no XP data found for level '" .. level .."'");
+    end
+end
+
+function XPMon:commandTotal()
+    print("|cffcc0000XPMon: coming soon...|r");
+end
+
+------------------------------------------------------
+-- WOW Addon Globals
+------------------------------------------------------
+
+SLASH_XPMON1 = '/xpmon';
 
 function SlashCmdList.XPMON(str, editBox)
     local command, args, s, e = str, nil;
@@ -174,8 +195,16 @@ function SlashCmdList.XPMON(str, editBox)
         return;
     end
     if (XPMon.commands[command]) then
-        XPMon.commands[command](args);
+        XPMon[XPMon.commands[command]](XPMon, args);
     else
         print("|cffcc0000XPMon: invalid command,", command);
     end
+end
+
+function XPMon_onLoad(self)
+    XPMon:onLoad(self)
+end
+
+function XPMon_onEvent(addon, event, ...)
+    XPMon:onEvent(addon, event, ...)
 end
