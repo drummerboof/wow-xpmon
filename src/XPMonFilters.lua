@@ -89,7 +89,15 @@ XPMon.filters = {
         state = {},
         events = { LFG_COMPLETION_REWARD = true },
         handler = function(event, data)
-            return nil
+            local name, instanceType, difficultyID, difficultyName, maxPlayers, dynamicDifficulty, isDynamic, instanceMapID, instanceGroupSize = GetInstanceInfo()
+            return {
+                source = XPMon.SOURCE_DUNGEON,
+                details = {
+                    instance = name,
+                    type = instanceType,
+                    difficulty = difficultyName
+                }
+            }
         end
     },
 
