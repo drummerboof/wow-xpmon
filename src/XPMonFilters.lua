@@ -120,18 +120,14 @@ XPMon.filters = {
         handler = function(event, data)
             local response
             if data == 1 then
-                local myPetIndex = C_PetBattles.GetActivePet(1)
                 local opponentPetIndex = C_PetBattles.GetActivePet(2)
                 response = {
                     source = XPMon.SOURCE_PET_BATTLE,
                     details = {
-                        pet = {
-                            name = C_PetBattles.GetName(myPetIndex),
-                            level = C_PetBattles.GetLevel(myPetIndex),
-                        },
                         opponent = {
-                            name = C_PetBattles.GetName(opponentPetIndex),
-                            level = C_PetBattles.GetLevel(opponentPetIndex),
+                            name = C_PetBattles.GetName(2, opponentPetIndex),
+                            level = C_PetBattles.GetLevel(2, opponentPetIndex),
+                            wild = C_PetBattles.IsWildBattle()
                         }
                     }
                 }

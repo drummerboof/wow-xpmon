@@ -153,26 +153,30 @@ describe("XPMon Filters", function ()
         it("Captures pet battle over events", function ()
             C_PetBattles = {
                 GetActivePet = spy.new(function (owner)
-                    return owner
+                    return 123
                 end),
                 GetName = spy.new(function (owner, index)
-                    return owner == 1 and "My Pet" or "Opponent Pet"
+                    return "Opponent Pet"
                 end),
                 GetLevel = spy.new(function (owner, index)
-                    return owner == 1 and 5 or 6
+                    return 6
+                end),
+                IsWildBattle = spy.new(function (owner, index)
+                    return true
                 end)
             }
 
             local result = XPMon.filters.XP_PET_BATTLE.handler("PET_BATTLE_FINAL_ROUND", 1)
+
+            assert.spy(C_PetBattles.GetActivePet).was.called_with(2)
+            assert.spy(C_PetBattles.GetName).was.called_with(2, 123)
+            assert.spy(C_PetBattles.GetLevel).was.called_with(2, 123)
             assert.are.equal(result.source, XPMon.SOURCE_PET_BATTLE)
             assert.are.same(result.details, {
-                pet = {
-                    name = "My Pet",
-                    level = 5
-                },
                 opponent = {
                     name = "Opponent Pet",
-                    level = 6
+                    level = 6,
+                    wild = true
                 }
             })
         end)
