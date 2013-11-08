@@ -163,7 +163,7 @@ describe("XPMon Filters", function ()
                 end)
             }
 
-            local result = XPMon.filters.XP_PET_BATTLE.handler("PET_BATTLE_OVER", 1)
+            local result = XPMon.filters.XP_PET_BATTLE.handler("PET_BATTLE_FINAL_ROUND", 1)
             assert.are.equal(result.source, XPMon.SOURCE_PET_BATTLE)
             assert.are.same(result.details, {
                 pet = {

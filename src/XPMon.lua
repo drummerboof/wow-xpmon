@@ -23,7 +23,8 @@ XPMon.XPEvents = {
     CHAT_MSG_SYSTEM = true,
     CHAT_MSG_COMBAT_XP_GAIN = true,
     CHAT_MSG_OPENING = true,
-    LFG_COMPLETION_REWARD = true
+    LFG_COMPLETION_REWARD = true,
+    PET_BATTLE_FINAL_ROUND = true
 }
 XPMon.otherEvents = {
     PLAYER_XP_UPDATE = "onPlayerXPUpdate",
