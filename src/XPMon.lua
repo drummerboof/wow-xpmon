@@ -41,13 +41,13 @@ function XPMon:onLoad(addon)
 
     -- XP related events to listen to
     for key, value in pairs(self.XPEvents) do
-        self:log("regestering", key)
+        self:log("registering", key)
         addon:RegisterEvent(key)
     end
 
     -- Other events to listen to
     for key, value in pairs(self.otherEvents) do
-        self:log("regestering", key)
+        self:log("registering", key)
         addon:RegisterEvent(key)
     end
 
