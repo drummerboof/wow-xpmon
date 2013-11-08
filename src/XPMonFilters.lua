@@ -89,7 +89,12 @@ XPMon.filters = {
         state = {},
         events = { LFG_COMPLETION_REWARD = true },
         handler = function(event, data)
-            local name, instanceType, difficultyID, difficultyName, maxPlayers, dynamicDifficulty, isDynamic, instanceMapID, instanceGroupSize = GetInstanceInfo()
+            local name, instanceType, difficultyID, difficultyName, maxPlayers, dynamicDifficulty, isDynamic, instanceMapID, instanceGroupSize
+            if IsInInstance() then
+                name, instanceType, difficultyID, difficultyName, maxPlayers, dynamicDifficulty, isDynamic, instanceMapID, instanceGroupSize = GetInstanceInfo()
+            else
+                name, instanceType, difficultyName = "Unknown", "Unknown","Unknown"
+            end
             return {
                 source = XPMon.SOURCE_DUNGEON,
                 details = {
@@ -111,9 +116,27 @@ XPMon.filters = {
 
     XP_PET_BATTLE = {
         state = {},
-        events = {},
+        events = { PET_BATTLE_FINAL_ROUND = true },
         handler = function(event, data)
-            return nil
+            local response
+            if data == 1 then
+                local myPetIndex = C_PetBattles.GetActivePet(1)
+                local opponentPetIndex = C_PetBattles.GetActivePet(2)
+                response = {
+                    source = XPMon.SOURCE_PET_BATTLE,
+                    details = {
+                        pet = {
+                            name = C_PetBattles.GetName(myPetIndex),
+                            level = C_PetBattles.GetLevel(myPetIndex),
+                        },
+                        opponent = {
+                            name = C_PetBattles.GetName(opponentPetIndex),
+                            level = C_PetBattles.GetLevel(opponentPetIndex),
+                        }
+                    }
+                }
+            end
+            return response
         end
     }
 }

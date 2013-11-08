@@ -119,11 +119,62 @@ describe("XPMon Filters", function ()
                 return "instanceName", "instanceType", "difficultyID", "difficultyName", "maxPlayers", "dynamicDifficulty", "isDynamic", "instanceMapID", "instanceGroupSize"
             end)
 
+            IsInInstance = spy.new(function ()
+                return true
+            end)
+
             local result = XPMon.filters.XP_DUNGEON_FINDER.handler("LFG_COMPLETION_REWARD")
             assert.are.equal(result.source, XPMon.SOURCE_DUNGEON)
             assert.are.equal(result.details.instance, "instanceName")
             assert.are.equal(result.details.type, "instanceType")
             assert.are.equal(result.details.difficulty, "difficultyName")
+
+            IsInInstance = spy.new(function ()
+                return false
+            end)
+
+            local result = XPMon.filters.XP_DUNGEON_FINDER.handler("LFG_COMPLETION_REWARD")
+            assert.are.equal(result.source, XPMon.SOURCE_DUNGEON)
+            assert.are.equal(result.details.instance, "Unknown")
+            assert.are.equal(result.details.type, "Unknown")
+            assert.are.equal(result.details.difficulty, "Unknown")
+        end)
+
+    end)
+
+    describe("XP_PET_BATTLE", function ()
+
+        it("Listens for the correct events", function ()
+            assert.are.same(XPMon.filters.XP_PET_BATTLE.events, {
+                PET_BATTLE_FINAL_ROUND = true
+            })
+        end)
+
+        it("Captures pet battle over events", function ()
+            C_PetBattles = {
+                GetActivePet = spy.new(function (owner)
+                    return owner
+                end),
+                GetName = spy.new(function (owner, index)
+                    return owner == 1 and "My Pet" or "Opponent Pet"
+                end),
+                GetLevel = spy.new(function (owner, index)
+                    return owner == 1 and 5 or 6
+                end)
+            }
+
+            local result = XPMon.filters.XP_PET_BATTLE.handler("PET_BATTLE_OVER", 1)
+            assert.are.equal(result.source, XPMon.SOURCE_PET_BATTLE)
+            assert.are.same(result.details, {
+                pet = {
+                    name = "My Pet",
+                    level = 5
+                },
+                opponent = {
+                    name = "Opponent Pet",
+                    level = 6
+                }
+            })
         end)
 
     end)
