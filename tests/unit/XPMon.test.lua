@@ -112,6 +112,12 @@ describe("XPMon Addon", function()
             XPMon.nextXPGain = nil
             stub(XPMon, "addXPEventForLevel")
             stub(XPMon, "setCurrentPlayerInfo")
+            GetRealZoneText = spy.new(function ()
+                return "Goldshire"
+            end)
+            time = spy.new(function ()
+                return 1383874275
+            end)
         end)
 
         after_each(function()
@@ -140,6 +146,8 @@ describe("XPMon Addon", function()
                 source = "Unknown",
                 experience = 20,
                 rested = 0,
+                zone = "Goldshire",
+                time = 1383874275,
                 details = {}
             })
             assert.are.equal(XPMon.addXPEventForLevel.calls[1][2], 10)
@@ -173,6 +181,8 @@ describe("XPMon Addon", function()
                 source = "Quest",
                 experience = 50,
                 rested = 0,
+                zone = "Goldshire",
+                time = 1383874275,
                 details = {
                     quest = "A Quest"
                 }
@@ -202,6 +212,8 @@ describe("XPMon Addon", function()
                 source = "Unknown",
                 experience = 10,
                 rested = 0,
+                zone = "Goldshire",
+                time = 1383874275,
                 details = {}
             })
             assert.are.equal(XPMon.addXPEventForLevel.calls[1][2], 10)
@@ -209,6 +221,8 @@ describe("XPMon Addon", function()
                 source = "Unknown",
                 experience = 40,
                 rested = 0,
+                zone = "Goldshire",
+                time = 1383874275,
                 details = {}
             })
             assert.are.equal(XPMon.addXPEventForLevel.calls[2][2], 11)
@@ -243,6 +257,8 @@ describe("XPMon Addon", function()
                 source = "Mob Kill",
                 experience = 10,
                 rested = 0,
+                zone = "Goldshire",
+                time = 1383874275,
                 details = {
                     mob = "A Mob"
                 }
@@ -252,6 +268,8 @@ describe("XPMon Addon", function()
                 source = "Mob Kill",
                 experience = 40,
                 rested = 25,
+                zone = "Goldshire",
+                time = 1383874275,
                 details = {
                     mob = "A Mob"
                 }
@@ -288,6 +306,8 @@ describe("XPMon Addon", function()
                 source = "Mob Kill",
                 experience = 35,
                 rested = 10,
+                zone = "Goldshire",
+                time = 1383874275,
                 details = {
                     mob = "A Mob"
                 }
@@ -297,6 +317,8 @@ describe("XPMon Addon", function()
                 source = "Mob Kill",
                 experience = 25,
                 rested = 15,
+                zone = "Goldshire",
+                time = 1383874275,
                 details = {
                     mob = "A Mob"
                 }

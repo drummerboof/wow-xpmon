@@ -94,13 +94,18 @@ function XPMon:onPlayerXPUpdate()
 
     xpEventCurrentLevel = XPMonUtil.deepcopy(self.nextXPGain or self.XP_EVENT_DEFAULT)
     xpEventCurrentLevel.rested = xpEventCurrentLevel.rested or 0
+    xpEventCurrentLevel.zone = GetRealZoneText()
+    xpEventCurrentLevel.time = time()
 
     self:log(" - remaining XP:", self.currentXPRemaining)
 
     if UnitLevel("player") > self.currentLevel then
         xpEventPrevLevel = XPMonUtil.deepcopy(self.nextXPGain or self.XP_EVENT_DEFAULT)
         xpEventPrevLevel.rested = xpEventPrevLevel.rested or 0
+        xpEventPrevLevel.zone = GetRealZoneText()
+        xpEventPrevLevel.time = time()
         xpEventPrevLevel.experience = self.currentXPRemaining
+
         xpEventCurrentLevel.experience = UnitXP("player")
 
         if xpEventCurrentLevel.rested > 0 then
