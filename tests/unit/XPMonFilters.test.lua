@@ -18,16 +18,16 @@ describe("XPMon Filters", function ()
 
         it("Captures mob kill info for non rested kills", function ()
             local result = XPMon.filters.XP_MOB_KILL.handler("CHAT_MSG_COMBAT_XP_GAIN", "Boof dies, you gain 100 experience.")
-            assert.are.equal(result.source, XPMon.SOURCE_KILL)
-            assert.are.equal(result.rested, 0)
-            assert.are.equal(result.details.mob, "Boof")
+            assert.are.equal(result:get("source"), XPMon.SOURCE_KILL)
+            assert.are.equal(result:get("rested"), 0)
+            assert.are.equal(result:get("details").mob, "Boof")
         end)
 
         it("Captures mob kill info for rested kills", function ()
             local result = XPMon.filters.XP_MOB_KILL.handler("CHAT_MSG_COMBAT_XP_GAIN", "Boof dies, you gain 100 experience. (+50 exp Rested bonus)")
-            assert.are.equal(result.source, XPMon.SOURCE_KILL)
-            assert.are.equal(result.rested, 50)
-            assert.are.equal(result.details.mob, "Boof")
+            assert.are.equal(result:get("source"), XPMon.SOURCE_KILL)
+            assert.are.equal(result:get("rested"), 50)
+            assert.are.equal(result:get("details").mob, "Boof")
         end)
 
         it("Ignores irrelevant messages", function ()
@@ -47,8 +47,8 @@ describe("XPMon Filters", function ()
 
         it("Captures quest completions", function ()
             local result = XPMon.filters.XP_QUEST.handler("CHAT_MSG_SYSTEM", "Awesome Super Quest completed.")
-            assert.are.equal(result.source, XPMon.SOURCE_QUEST)
-            assert.are.equal(result.details.quest, "Awesome Super Quest")
+            assert.are.equal(result:get("source"), XPMon.SOURCE_QUEST)
+            assert.are.equal(result:get("details").quest, "Awesome Super Quest")
         end)
 
         it("Ignores irrelevant messages", function ()
@@ -68,14 +68,14 @@ describe("XPMon Filters", function ()
 
         it("Captures gathering actions", function ()
             local result = XPMon.filters.XP_PROFESSION.handler("CHAT_MSG_OPENING", "You perform Herb Gathering on Super Herb.")
-            assert.are.equal(result.source, XPMon.SOURCE_PROFESSION)
-            assert.are.equal(result.details.profession, "Herb Gathering")
-            assert.are.equal(result.details.material, "Super Herb")
+            assert.are.equal(result:get("source"), XPMon.SOURCE_PROFESSION)
+            assert.are.equal(result:get("details").profession, "Herb Gathering")
+            assert.are.equal(result:get("details").material, "Super Herb")
 
             result = XPMon.filters.XP_PROFESSION.handler("CHAT_MSG_OPENING", "You perform Another Profession on Another Herb.")
-            assert.are.equal(result.source, XPMon.SOURCE_PROFESSION)
-            assert.are.equal(result.details.profession, "Another Profession")
-            assert.are.equal(result.details.material, "Another Herb")
+            assert.are.equal(result:get("source"), XPMon.SOURCE_PROFESSION)
+            assert.are.equal(result:get("details").profession, "Another Profession")
+            assert.are.equal(result:get("details").material, "Another Herb")
         end)
 
         it("Ignores irrelevant messages", function ()
@@ -95,8 +95,8 @@ describe("XPMon Filters", function ()
 
         it("Captures exploration events", function ()
             local result = XPMon.filters.XP_EXPLORATION.handler("CHAT_MSG_SYSTEM", "Discovered The Ruins of Some Trolls: 100 experience gained")
-            assert.are.equal(result.source, XPMon.SOURCE_EXPLORATION)
-            assert.are.equal(result.details.place, "The Ruins of Some Trolls")
+            assert.are.equal(result:get("source"), XPMon.SOURCE_EXPLORATION)
+            assert.are.equal(result:get("details").place, "The Ruins of Some Trolls")
         end)
 
         it("Ignores irrelevant messages", function ()
@@ -124,20 +124,24 @@ describe("XPMon Filters", function ()
             end)
 
             local result = XPMon.filters.XP_DUNGEON_FINDER.handler("LFG_COMPLETION_REWARD")
-            assert.are.equal(result.source, XPMon.SOURCE_DUNGEON)
-            assert.are.equal(result.details.instance, "instanceName")
-            assert.are.equal(result.details.type, "instanceType")
-            assert.are.equal(result.details.difficulty, "difficultyName")
+            assert.are.equal(result:get("source"), XPMon.SOURCE_DUNGEON)
+            assert.are.same(result:get("details"),  {
+                instance = "instanceName",
+                type = "instanceType",
+                difficulty = "difficultyName"
+            })
 
             IsInInstance = spy.new(function ()
                 return false
             end)
 
             local result = XPMon.filters.XP_DUNGEON_FINDER.handler("LFG_COMPLETION_REWARD")
-            assert.are.equal(result.source, XPMon.SOURCE_DUNGEON)
-            assert.are.equal(result.details.instance, "Unknown")
-            assert.are.equal(result.details.type, "Unknown")
-            assert.are.equal(result.details.difficulty, "Unknown")
+            assert.are.equal(result:get("source"), XPMon.SOURCE_DUNGEON)
+            assert.are.same(result:get("details"),  {
+                instance = "Unknown",
+                type = "Unknown",
+                difficulty = "Unknown"
+            })
         end)
 
     end)
@@ -171,8 +175,8 @@ describe("XPMon Filters", function ()
             assert.spy(C_PetBattles.GetActivePet).was.called_with(2)
             assert.spy(C_PetBattles.GetName).was.called_with(2, 123)
             assert.spy(C_PetBattles.GetLevel).was.called_with(2, 123)
-            assert.are.equal(result.source, XPMon.SOURCE_PET_BATTLE)
-            assert.are.same(result.details, {
+            assert.are.equal(result:get("source"), XPMon.SOURCE_PET_BATTLE)
+            assert.are.same(result:get("details"), {
                 opponent = {
                     name = "Opponent Pet",
                     level = 6,

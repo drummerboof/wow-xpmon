@@ -1,7 +1,8 @@
 package.path = package.path .. "../../?.lua"
-require("XPMonUtils")
 require("XPMonFilters")
+require("XPEvent")
 require("XPMon")
+require("XPMonUtils")
 
 
 describe("XPMon Addon", function()
@@ -9,6 +10,7 @@ describe("XPMon Addon", function()
     local filters, xpEvents, otherEvents
 
     setup(function()
+        time = spy.new(function () return 100 end)
         assert:set_parameter("TableFormatLevel", 10)
 
         filters = XPMon.filters
@@ -110,13 +112,13 @@ describe("XPMon Addon", function()
 
         before_each(function()
             XPMon.nextXPGain = nil
+            XPMon.currentXP = 100
+            XPMon.currentXPRemaining = 200
+            XPMon.currentLevel = 10
             stub(XPMon, "addXPEventForLevel")
             stub(XPMon, "setCurrentPlayerInfo")
             GetRealZoneText = spy.new(function ()
                 return "Goldshire"
-            end)
-            time = spy.new(function ()
-                return 1383874275
             end)
         end)
 
@@ -127,10 +129,14 @@ describe("XPMon Addon", function()
             XPMon.addXPEventForLevel:revert()
         end)
 
-        it("Sets one unknown XP event if nextXPGain is nil and we have not levelled up", function()
-            XPMon.currentXP = 100
-            XPMon.currentXPRemaining = 200
-            XPMon.currentLevel = 10
+        it("Unsets the current XP event if it occured more that XP_GAIN_TIMEOUT seconds ago", function()
+            XPMon.nextXPGain = XPEvent:new({
+                source = "Quest",
+                details = {
+                    quest = "A Quest"
+                }
+            })
+            XPMon.nextXPGain:set("time", 90)
 
             UnitXP = spy.new(function()
                 return 120
@@ -142,14 +148,36 @@ describe("XPMon Addon", function()
             XPMon:onPlayerXPUpdate()
 
             assert.stub(XPMon.addXPEventForLevel).was_called(1)
-            assert.are.same(XPMon.addXPEventForLevel.calls[1][3], {
+            assert.are.same({
                 source = "Unknown",
                 experience = 20,
                 rested = 0,
                 zone = "Goldshire",
-                time = 1383874275,
+                time = 100,
                 details = {}
-            })
+            }, XPMon.addXPEventForLevel.calls[1][3]:data())
+        end)
+
+        it("Sets one unknown XP event if nextXPGain is nil and we have not levelled up", function()
+
+            UnitXP = spy.new(function()
+                return 120
+            end)
+            UnitLevel = spy.new(function()
+                return 10
+            end)
+
+            XPMon:onPlayerXPUpdate()
+
+            assert.stub(XPMon.addXPEventForLevel).was_called(1)
+            assert.are.same({
+                source = "Unknown",
+                experience = 20,
+                rested = 0,
+                zone = "Goldshire",
+                time = 100,
+                details = {}
+            }, XPMon.addXPEventForLevel.calls[1][3]:data())
             assert.are.equal(XPMon.addXPEventForLevel.calls[1][2], 10)
             assert.stub(XPMon.setCurrentPlayerInfo).was_called()
             assert.stub(UnitXP).was_called_with("player")
@@ -157,15 +185,12 @@ describe("XPMon Addon", function()
         end)
 
         it("Sets one known XP event if nextXPGain is set and we have not levelled up", function()
-            XPMon.currentXP = 100
-            XPMon.currentXPRemaining = 200
-            XPMon.currentLevel = 10
-            XPMon.nextXPGain = {
+            XPMon.nextXPGain = XPEvent:new({
                 source = "Quest",
                 details = {
                     quest = "A Quest"
                 }
-            }
+            })
 
             UnitXP = spy.new(function()
                 return 150
@@ -177,16 +202,16 @@ describe("XPMon Addon", function()
             XPMon:onPlayerXPUpdate()
 
             assert.stub(XPMon.addXPEventForLevel).was_called(1)
-            assert.are.same(XPMon.addXPEventForLevel.calls[1][3], {
+            assert.are.same({
                 source = "Quest",
                 experience = 50,
                 rested = 0,
                 zone = "Goldshire",
-                time = 1383874275,
+                time = 100,
                 details = {
                     quest = "A Quest"
                 }
-            })
+            }, XPMon.addXPEventForLevel.calls[1][3]:data())
             assert.are.equal(XPMon.addXPEventForLevel.calls[1][2], 10)
             assert.stub(XPMon.setCurrentPlayerInfo).was_called()
             assert.stub(UnitXP).was_called_with("player")
@@ -196,7 +221,6 @@ describe("XPMon Addon", function()
         it("Sets two unknown XP events if nextXPGain is not set and we have levelled up", function()
             XPMon.currentXP = 190
             XPMon.currentXPRemaining = 10
-            XPMon.currentLevel = 10
 
             UnitXP = spy.new(function()
                 return 40
@@ -208,23 +232,23 @@ describe("XPMon Addon", function()
             XPMon:onPlayerXPUpdate()
 
             assert.stub(XPMon.addXPEventForLevel).was_called(2)
-            assert.are.same(XPMon.addXPEventForLevel.calls[1][3], {
+            assert.are.same({
                 source = "Unknown",
                 experience = 10,
                 rested = 0,
                 zone = "Goldshire",
-                time = 1383874275,
+                time = 100,
                 details = {}
-            })
+            }, XPMon.addXPEventForLevel.calls[1][3]:data())
             assert.are.equal(XPMon.addXPEventForLevel.calls[1][2], 10)
-            assert.are.same(XPMon.addXPEventForLevel.calls[2][3], {
+            assert.are.same({
                 source = "Unknown",
                 experience = 40,
                 rested = 0,
                 zone = "Goldshire",
-                time = 1383874275,
+                time = 100,
                 details = {}
-            })
+            }, XPMon.addXPEventForLevel.calls[2][3]:data())
             assert.are.equal(XPMon.addXPEventForLevel.calls[2][2], 11)
             assert.stub(XPMon.setCurrentPlayerInfo).was_called()
             assert.stub(UnitXP).was_called_with("player")
@@ -234,14 +258,13 @@ describe("XPMon Addon", function()
         it("Splits rested XP correctly when we level up", function()
             XPMon.currentXP = 190
             XPMon.currentXPRemaining = 10
-            XPMon.currentLevel = 10
-            XPMon.nextXPGain = {
+            XPMon.nextXPGain = XPEvent:new({
                 source = "Mob Kill",
                 rested = 25,
                 details = {
                     mob = "A Mob"
                 }
-            }
+            })
 
             UnitXP = spy.new(function()
                 return 40
@@ -253,27 +276,27 @@ describe("XPMon Addon", function()
             XPMon:onPlayerXPUpdate()
 
             assert.stub(XPMon.addXPEventForLevel).was_called(2)
-            assert.are.same(XPMon.addXPEventForLevel.calls[1][3], {
+            assert.are.same({
                 source = "Mob Kill",
                 experience = 10,
                 rested = 0,
                 zone = "Goldshire",
-                time = 1383874275,
+                time = 100,
                 details = {
                     mob = "A Mob"
                 }
-            })
+            }, XPMon.addXPEventForLevel.calls[1][3]:data())
             assert.are.equal(XPMon.addXPEventForLevel.calls[1][2], 10)
-            assert.are.same(XPMon.addXPEventForLevel.calls[2][3], {
+            assert.are.same({
                 source = "Mob Kill",
                 experience = 40,
                 rested = 25,
                 zone = "Goldshire",
-                time = 1383874275,
+                time = 100,
                 details = {
                     mob = "A Mob"
                 }
-            })
+            }, XPMon.addXPEventForLevel.calls[2][3]:data())
             assert.are.equal(XPMon.addXPEventForLevel.calls[2][2], 11)
             assert.stub(XPMon.setCurrentPlayerInfo).was_called()
             assert.stub(UnitXP).was_called_with("player")
@@ -283,14 +306,13 @@ describe("XPMon Addon", function()
         it("Splits rested XP correctly when we level up", function()
             XPMon.currentXP = 165
             XPMon.currentXPRemaining = 35
-            XPMon.currentLevel = 10
-            XPMon.nextXPGain = {
+            XPMon.nextXPGain = XPEvent:new({
                 source = "Mob Kill",
                 rested = 25,
                 details = {
                     mob = "A Mob"
                 }
-            }
+            })
 
             UnitXP = spy.new(function()
                 return 25
@@ -302,27 +324,27 @@ describe("XPMon Addon", function()
             XPMon:onPlayerXPUpdate()
 
             assert.stub(XPMon.addXPEventForLevel).was_called(2)
-            assert.are.same(XPMon.addXPEventForLevel.calls[1][3], {
+            assert.are.same({
                 source = "Mob Kill",
                 experience = 35,
                 rested = 10,
                 zone = "Goldshire",
-                time = 1383874275,
+                time = 100,
                 details = {
                     mob = "A Mob"
                 }
-            })
+            }, XPMon.addXPEventForLevel.calls[1][3]:data())
             assert.are.equal(XPMon.addXPEventForLevel.calls[1][2], 10)
-            assert.are.same(XPMon.addXPEventForLevel.calls[2][3], {
+            assert.are.same({
                 source = "Mob Kill",
                 experience = 25,
                 rested = 15,
                 zone = "Goldshire",
-                time = 1383874275,
+                time = 100,
                 details = {
                     mob = "A Mob"
                 }
-            })
+            }, XPMon.addXPEventForLevel.calls[2][3]:data())
             assert.are.equal(XPMon.addXPEventForLevel.calls[2][2], 11)
             assert.stub(XPMon.setCurrentPlayerInfo).was_called()
             assert.stub(UnitXP).was_called_with("player")
@@ -343,6 +365,8 @@ describe("XPMon Addon", function()
                 return 10
             end)
 
+            XPMon.nextXPGain = {}
+            XPMon.nextXPGainDiscovered = 100
             XPMon:setCurrentPlayerInfo()
 
             assert.stub(UnitXP).was_called_with("player")
@@ -368,16 +392,16 @@ describe("XPMon Addon", function()
                 return 2500
             end)
 
-            XPMon:addXPEventForLevel(10, {
+            XPMon:addXPEventForLevel(10, XPEvent:new({
                 source = "Quest",
                 experience = 200,
                 rested = 0,
                 details = {
                     quest = "A quest"
                 }
-            })
+            }))
 
-            assert.are.same(XPMon_DATA, {
+            assert.are.same({
                 [10] = {
                     total = 200,
                     max = 2500,
@@ -386,6 +410,7 @@ describe("XPMon Addon", function()
                             total = 200,
                             events = {
                                 {
+                                    time = 100,
                                     experience = 200,
                                     rested = 0,
                                     details = {
@@ -396,18 +421,18 @@ describe("XPMon Addon", function()
                         }
                     }
                 }
-            })
+            }, XPMon_DATA)
 
-            XPMon:addXPEventForLevel(10, {
+            XPMon:addXPEventForLevel(10, XPEvent:new({
                 source = "Mob Kill",
                 experience = 50,
                 rested = 25,
                 details = {
                     quest = "A mob"
                 }
-            })
+            }))
 
-            assert.are.same(XPMon_DATA, {
+            assert.are.same({
                 [10] = {
                     total = 250,
                     max = 2500,
@@ -416,6 +441,7 @@ describe("XPMon Addon", function()
                             total = 200,
                             events = {
                                 {
+                                    time = 100,
                                     experience = 200,
                                     rested = 0,
                                     details = {
@@ -428,6 +454,7 @@ describe("XPMon Addon", function()
                             total = 50,
                             events = {
                                 {
+                                    time = 100,
                                     experience = 50,
                                     rested = 25,
                                     details = {
@@ -438,18 +465,18 @@ describe("XPMon Addon", function()
                         }
                     }
                 }
-            })
+            }, XPMon_DATA)
 
-            XPMon:addXPEventForLevel(10, {
+            XPMon:addXPEventForLevel(10, XPEvent:new({
                 source = "Mob Kill",
                 experience = 100,
                 rested = 50,
                 details = {
                     quest = "Another mob"
                 }
-            })
+            }))
 
-            assert.are.same(XPMon_DATA, {
+            assert.are.same({
                 [10] = {
                     total = 350,
                     max = 2500,
@@ -458,6 +485,7 @@ describe("XPMon Addon", function()
                             total = 200,
                             events = {
                                 {
+                                    time = 100,
                                     experience = 200,
                                     rested = 0,
                                     details = {
@@ -470,6 +498,7 @@ describe("XPMon Addon", function()
                             total = 150,
                             events = {
                                 {
+                                    time = 100,
                                     experience = 50,
                                     rested = 25,
                                     details = {
@@ -477,6 +506,7 @@ describe("XPMon Addon", function()
                                     }
                                 },
                                 {
+                                    time = 100,
                                     experience = 100,
                                     rested = 50,
                                     details = {
@@ -487,7 +517,7 @@ describe("XPMon Addon", function()
                         }
                     }
                 }
-            })
+            }, XPMon_DATA)
 
             UnitXPMax:revert()
         end)

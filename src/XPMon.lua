@@ -1,5 +1,3 @@
-SlashCmdList = SlashCmdList or {}
-
 ------------------------------------------------------
 -- XPMon Addon Instance
 ------------------------------------------------------
@@ -8,12 +6,7 @@ XPMon = XPMon or {}
 
 XPMon.DEBUG = false
 XPMon.NAME = "XPMon"
-XPMon.XP_EVENT_DEFAULT = {
-    source = "Unknown",
-    experience = 0,
-    rested = 0,
-    details = {}
-};
+XPMon.XP_GAIN_TIMEOUT = 2
 
 XPMon.nextXPGain = nil
 XPMon.currentXP = nil
@@ -85,49 +78,51 @@ function XPMon:onEvent(addon, event, ...)
 end
 
 function XPMon:onPlayerXPUpdate()
-    -- Maybe check that the xpEvent we have registered didn't happen too long ago,
-    -- or alternatively, clear out the nextXPGain variable after a timeout
+    -- Check that the xpEvent we have registered didn't happen too long ago to
+    -- avoid logging XP data against the wrong event, better it is logged as Unknown
+    if self.nextXPGain and self.nextXPGain:get("time") > 0 then
+        if time() - self.nextXPGain:get("time") > self.XP_GAIN_TIMEOUT then
+            self:log("XPEvent too old, ignoring")
+            self.nextXPGain = nil
+        end
+    end
 
     self:log("Player XP update!")
 
     local xpEventPrevLevel, xpEventCurrentLevel
 
-    xpEventCurrentLevel = XPMonUtil.deepcopy(self.nextXPGain or self.XP_EVENT_DEFAULT)
-    xpEventCurrentLevel.rested = xpEventCurrentLevel.rested or 0
-    xpEventCurrentLevel.zone = GetRealZoneText()
-    xpEventCurrentLevel.time = time()
+    xpEventCurrentLevel = self.nextXPGain or XPEvent:new()
+    xpEventCurrentLevel:set("zone", GetRealZoneText())
 
     self:log(" - remaining XP:", self.currentXPRemaining)
 
     if UnitLevel("player") > self.currentLevel then
-        xpEventPrevLevel = XPMonUtil.deepcopy(self.nextXPGain or self.XP_EVENT_DEFAULT)
-        xpEventPrevLevel.rested = xpEventPrevLevel.rested or 0
-        xpEventPrevLevel.zone = GetRealZoneText()
-        xpEventPrevLevel.time = time()
-        xpEventPrevLevel.experience = self.currentXPRemaining
+        xpEventPrevLevel = XPEvent:new(xpEventCurrentLevel:data())
+        xpEventPrevLevel:set("experience", self.currentXPRemaining)
 
-        xpEventCurrentLevel.experience = UnitXP("player")
+        xpEventCurrentLevel:set("experience", UnitXP("player"))
 
-        if xpEventCurrentLevel.rested > 0 then
-            xpEventPrevLevel.rested = math.max(0, xpEventPrevLevel.experience - xpEventPrevLevel.rested)
-            xpEventCurrentLevel.rested = xpEventCurrentLevel.rested - xpEventPrevLevel.rested
+        if xpEventCurrentLevel:get("rested") > 0 then
+            xpEventPrevLevel:set("rested", math.max(0, xpEventPrevLevel:get("experience") - xpEventPrevLevel:get("rested")))
+            xpEventCurrentLevel:set("rested", xpEventCurrentLevel:get("rested") - xpEventPrevLevel:get("rested"))
         end
 
-        XPMon:log("Saving XP event for previous level: ", xpEventPrevLevel.source, xpEventPrevLevel.experience, xpEventPrevLevel.rested)
+        XPMon:log("Saving XP event for previous level: ", xpEventPrevLevel:get("source"), xpEventPrevLevel:get("experience"), xpEventPrevLevel:get("rested"))
         XPMon:addXPEventForLevel(self.currentLevel, xpEventPrevLevel)
     else
-        xpEventCurrentLevel.experience = UnitXP("player") - self.currentXP
+        xpEventCurrentLevel:set("experience", UnitXP("player") - self.currentXP)
     end
 
-    XPMon:log("Saving XP event for current level: ", xpEventCurrentLevel.source, xpEventCurrentLevel.experience, xpEventCurrentLevel.rested)
+    XPMon:log("Saving XP event for current level: ", xpEventCurrentLevel:get("source"), xpEventCurrentLevel:get("experience"), xpEventCurrentLevel:get("rested"))
     XPMon:addXPEventForLevel(UnitLevel("player"), xpEventCurrentLevel)
 
     XPMon:setCurrentPlayerInfo()
 end
 
 function XPMon:addXPEventForLevel(level, event)
-    local source = event.source
-    event.source = nil
+    local source = event:get("source")
+    event:unset("source")
+
     if XPMon_DATA[level] == nil then
         XPMon_DATA[level] = {
             total = 0,
@@ -141,9 +136,9 @@ function XPMon:addXPEventForLevel(level, event)
             events = {}
         }
     end
-    table.insert(XPMon_DATA[level].data[source].events, event)
-    XPMon_DATA[level].total = XPMon_DATA[level].total + event.experience
-    XPMon_DATA[level].data[source].total = XPMon_DATA[level].data[source].total + event.experience
+    table.insert(XPMon_DATA[level].data[source].events, event:data())
+    XPMon_DATA[level].total = XPMon_DATA[level].total + event:get("experience")
+    XPMon_DATA[level].data[source].total = XPMon_DATA[level].data[source].total + event:get("experience")
 end
 
 function XPMon:setCurrentPlayerInfo()
@@ -197,6 +192,8 @@ end
 ------------------------------------------------------
 -- WOW Global Stuff
 ------------------------------------------------------
+
+SlashCmdList = SlashCmdList or {}
 
 -- Slash commands
 SLASH_XPMON1 = '/xpmon'

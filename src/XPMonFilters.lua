@@ -18,13 +18,13 @@ XPMon.filters = {
             local s, e, mob, exp = data:find("^(.+) dies, you gain ([%d]+) experience.")
             if mob and exp then
                 local s, e, rested = data:find(" %(%+([%d]+) exp Rested bonus%)$")
-                result = {
+                result = XPEvent:new({
                     source = XPMon.SOURCE_KILL,
                     rested = tonumber(rested or 0),
                     details = {
                         mob = mob
                     }
-                }
+                })
             end
             return result
         end
@@ -37,12 +37,12 @@ XPMon.filters = {
             local result
             local s, e, quest = data:find("^(.+) completed.")
             if quest then
-                result = {
+                result = XPEvent:new({
                     source = XPMon.SOURCE_QUEST,
                     details = {
                         quest = quest
                     }
-                }
+                })
             end
             return result
         end
@@ -55,13 +55,13 @@ XPMon.filters = {
             local result
             local s, e, profession, material = data:find("^You perform (.+) on (.+).$")
             if profession and material then
-                result = {
+                result = XPEvent:new({
                     source = XPMon.SOURCE_PROFESSION,
                     details = {
                         profession = profession,
                         material = material
                     }
-                }
+                })
             end
             return result
         end
@@ -74,12 +74,12 @@ XPMon.filters = {
             local result
             local s, e, place, exp = data:find("^Discovered (.+): ([%d]+) experience gained$")
             if place and exp then
-                result = {
+                result = XPEvent:new({
                     source = XPMon.SOURCE_EXPLORATION,
                     details = {
                         place = place
                     }
-                }
+                })
             end
             return result
         end
@@ -95,14 +95,14 @@ XPMon.filters = {
             else
                 name, instanceType, difficultyName = "Unknown", "Unknown","Unknown"
             end
-            return {
+            return XPEvent:new({
                 source = XPMon.SOURCE_DUNGEON,
                 details = {
                     instance = name,
                     type = instanceType,
                     difficulty = difficultyName
                 }
-            }
+            })
         end
     },
 
@@ -118,10 +118,10 @@ XPMon.filters = {
         state = {},
         events = { PET_BATTLE_FINAL_ROUND = true },
         handler = function(event, data)
-            local response
+            local result
             if data == 1 then
                 local opponentPetIndex = C_PetBattles.GetActivePet(2)
-                response = {
+                result = XPEvent:new({
                     source = XPMon.SOURCE_PET_BATTLE,
                     details = {
                         opponent = {
@@ -130,9 +130,9 @@ XPMon.filters = {
                             wild = C_PetBattles.IsWildBattle()
                         }
                     }
-                }
+                })
             end
-            return response
+            return result
         end
     }
 }
