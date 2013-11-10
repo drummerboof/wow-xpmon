@@ -7,7 +7,7 @@ require("XPMonUtils")
 
 describe("XPMon Addon", function()
 
-    local filters, xpEvents, otherEvents
+    local filters
 
     setup(function()
         time = spy.new(function () return 100 end)
@@ -54,6 +54,7 @@ describe("XPMon Addon", function()
             assert.spy(mockAddon.RegisterEvent).was_called_with(mockAddon, "CHAT_MSG_COMBAT_XP_GAIN")
             assert.spy(mockAddon.RegisterEvent).was_called_with(mockAddon, "CHAT_MSG_OPENING")
             assert.spy(mockAddon.RegisterEvent).was_called_with(mockAddon, "LFG_COMPLETION_REWARD")
+            assert.spy(mockAddon.RegisterEvent).was_called_with(mockAddon, "PET_BATTLE_FINAL_ROUND")
             assert.spy(mockAddon.RegisterEvent).was_called_with(mockAddon, "PLAYER_XP_UPDATE")
             assert.spy(mockAddon.RegisterEvent).was_called_with(mockAddon, "ADDON_LOADED")
             assert.spy(mockAddon.RegisterEvent).was_called_with(mockAddon, "PLAYER_LOGIN")

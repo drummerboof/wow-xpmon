@@ -19,3 +19,7 @@ function XPMonUtil.deepcopy(orig)
     end
     return copy
 end
+
+function XPMonUtil.print(msg, colour, indent)
+    print(string.rep(" ", (indent or 0) * 4) .. "|cff" .. colour .. msg .. "|r")
+end
