@@ -1,4 +1,3 @@
-
 --------------------
 -- Utility functions
 --------------------
@@ -22,4 +21,9 @@ end
 
 function XPMonUtil.print(msg, colour, indent)
     print(string.rep(" ", (indent or 0) * 4) .. "|cff" .. colour .. msg .. "|r")
+end
+
+function XPMonUtil.round(num, idp)
+    local mult = 10^(idp or 0)
+    return math.floor(num * mult + 0.5) / mult
 end

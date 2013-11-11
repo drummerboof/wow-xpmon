@@ -6,9 +6,9 @@ XPMon = XPMon or {}
 
 XPMon.DEBUG = false
 XPMon.NAME = "XPMon"
-XPMon.XP_GAIN_TIMEOUT = 2
+XPMon.XP_GAIN_TIMEOUT = 5
 XPMon.COLOURS = {
-    SYSTEM = "fffff00",
+    SYSTEM = "ffff00",
     DATA = "1bb8f7",
     KNOCKBACK = "b3c2c7",
     ERROR = "cc0000"
@@ -96,10 +96,15 @@ function XPMon:onPlayerXPUpdate()
 
     self:log("Player XP update!")
 
+    local x, y = GetPlayerMapPosition("player")
     local xpEventPrevLevel, xpEventCurrentLevel
 
     xpEventCurrentLevel = self.nextXPGain or XPEvent:new()
     xpEventCurrentLevel:set("zone", GetRealZoneText())
+    xpEventCurrentLevel:set("position", {
+        x = XPMonUtil.round(x*100, 2),
+        y = XPMonUtil.round(y*100, 2)
+    })
 
     self:log(" - remaining XP:", self.currentXPRemaining)
 

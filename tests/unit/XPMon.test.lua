@@ -11,6 +11,7 @@ describe("XPMon Addon", function()
 
     setup(function()
         time = spy.new(function () return 100 end)
+        GetPlayerMapPosition = spy.new(function () return 0.5454, 0.6565 end)
         assert:set_parameter("TableFormatLevel", 10)
 
         filters = XPMon.filters
@@ -154,6 +155,7 @@ describe("XPMon Addon", function()
                 experience = 20,
                 rested = 0,
                 zone = "Goldshire",
+                position = { x = 54.54, y = 65.65 },
                 time = 100,
                 details = {}
             }, XPMon.addXPEventForLevel.calls[1][3]:data())
@@ -176,6 +178,7 @@ describe("XPMon Addon", function()
                 experience = 20,
                 rested = 0,
                 zone = "Goldshire",
+                position = { x = 54.54, y = 65.65 },
                 time = 100,
                 details = {}
             }, XPMon.addXPEventForLevel.calls[1][3]:data())
@@ -208,6 +211,7 @@ describe("XPMon Addon", function()
                 experience = 50,
                 rested = 0,
                 zone = "Goldshire",
+                position = { x = 54.54, y = 65.65 },
                 time = 100,
                 details = {
                     quest = "A Quest"
@@ -238,6 +242,7 @@ describe("XPMon Addon", function()
                 experience = 10,
                 rested = 0,
                 zone = "Goldshire",
+                position = { x = 54.54, y = 65.65 },
                 time = 100,
                 details = {}
             }, XPMon.addXPEventForLevel.calls[1][3]:data())
@@ -247,6 +252,7 @@ describe("XPMon Addon", function()
                 experience = 40,
                 rested = 0,
                 zone = "Goldshire",
+                position = { x = 54.54, y = 65.65 },
                 time = 100,
                 details = {}
             }, XPMon.addXPEventForLevel.calls[2][3]:data())
@@ -282,6 +288,7 @@ describe("XPMon Addon", function()
                 experience = 10,
                 rested = 0,
                 zone = "Goldshire",
+                position = { x = 54.54, y = 65.65 },
                 time = 100,
                 details = {
                     mob = "A Mob"
@@ -293,6 +300,7 @@ describe("XPMon Addon", function()
                 experience = 40,
                 rested = 25,
                 zone = "Goldshire",
+                position = { x = 54.54, y = 65.65 },
                 time = 100,
                 details = {
                     mob = "A Mob"
@@ -330,6 +338,7 @@ describe("XPMon Addon", function()
                 experience = 35,
                 rested = 10,
                 zone = "Goldshire",
+                position = { x = 54.54, y = 65.65 },
                 time = 100,
                 details = {
                     mob = "A Mob"
@@ -341,6 +350,7 @@ describe("XPMon Addon", function()
                 experience = 25,
                 rested = 15,
                 zone = "Goldshire",
+                position = { x = 54.54, y = 65.65 },
                 time = 100,
                 details = {
                     mob = "A Mob"
