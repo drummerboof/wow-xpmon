@@ -4,6 +4,11 @@ require("XPEvent")
 require("XPMon")
 require("XPMonUtils")
 
+XPMonFrameSelectLevel = {}
+UIDropDownMenu_SetText = spy.new(function ()  end)
+XPMonTitleTextLevel = {
+    SetText = spy.new(function ()  end)
+}
 
 describe("XPMon Addon", function()
 
@@ -14,6 +19,7 @@ describe("XPMon Addon", function()
         GetPlayerMapPosition = spy.new(function () return 0.5454, 0.6565 end)
         assert:set_parameter("TableFormatLevel", 10)
 
+        XPMon.currentLevel = 10
         filters = XPMon.filters
         XPMon.DEBUG = false
         XPMon.filters = {

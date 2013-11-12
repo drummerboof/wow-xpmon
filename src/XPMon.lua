@@ -4,7 +4,7 @@
 
 XPMon = XPMon or {}
 
-XPMon.DEBUG = false
+XPMon.DEBUG = true
 XPMon.NAME = "XPMon"
 XPMon.XP_GAIN_TIMEOUT = 5
 XPMon.COLOURS = {
@@ -13,15 +13,6 @@ XPMon.COLOURS = {
     KNOCKBACK = "b3c2c7",
     ERROR = "cc0000"
 }
-XPMon.COMMANDS = {
-    LEVEL = "commandLevel",
-    TOTAL = "commadTotal"
-}
-
-XPMon.nextXPGain = nil
-XPMon.currentXP = nil
-XPMon.currentXPRemaining = nil
-XPMon.currentLevel = nil
 XPMon.EVENTS_XP = {
     CHAT_MSG_SYSTEM = true,
     CHAT_MSG_COMBAT_XP_GAIN = true,
@@ -35,7 +26,10 @@ XPMon.EVENT_HANDLERS = {
     PLAYER_LOGIN = "onPlayerLogin"
 }
 
-
+XPMon.nextXPGain = nil
+XPMon.currentXP = nil
+XPMon.currentXPRemaining = nil
+XPMon.currentLevel = nil
 
 function XPMon:onLoad(addon)
 
@@ -62,9 +56,11 @@ end
 
 function XPMon:onPlayerLogin(event)
     self:setCurrentPlayerInfo()
+    self:UI_ShowLevelInformation(self.currentLevel)
 end
 
 function XPMon:onEvent(addon, event, ...)
+    XPMon:log(addon, event)
     -- XP related event here
     if self.EVENTS_XP[event] ~= nil then
         for key, value in pairs(self.filters) do
@@ -76,7 +72,7 @@ function XPMon:onEvent(addon, event, ...)
             end
         end
 
-    -- Other events
+        -- Other events
     else
         if self.EVENT_HANDLERS[event] ~= nil then
             self[self.EVENT_HANDLERS[event]](self, event, ...)
@@ -102,8 +98,8 @@ function XPMon:onPlayerXPUpdate()
     xpEventCurrentLevel = self.nextXPGain or XPEvent:new()
     xpEventCurrentLevel:set("zone", GetRealZoneText())
     xpEventCurrentLevel:set("position", {
-        x = XPMonUtil.round(x*100, 2),
-        y = XPMonUtil.round(y*100, 2)
+        x = XPMonUtil.round(x * 100, 2),
+        y = XPMonUtil.round(y * 100, 2)
     })
 
     self:log(" - remaining XP:", self.currentXPRemaining)
@@ -167,7 +163,56 @@ function XPMon:log(...)
     end
 end
 
-function XPMon:commandLevel(args)
+------------------------------------------------------
+-- UI Stuff
+------------------------------------------------------
+function XPMon:UI_ShowLevelInformation(level)
+    print("Showing info for " .. level)
+    XPMonFrameSelectLevel.selectedValue = level
+    XPMonFrameSelectLevel.selectedName = "Level " .. level
+    UIDropDownMenu_SetText(XPMonFrameSelectLevel, XPMonFrameSelectLevel.selectedName)
+    XPMonTitleTextLevel:SetText(level)
+end
+
+function XPMon:UI_InitLevelSelect(frame)
+    local levels = {}
+    for level, info in pairs(XPMon_DATA) do
+        table.insert(levels, level)
+    end
+    table.sort(levels, function (a, b) return a > b end)
+    for i, level in pairs(levels) do
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = "Level " .. level
+        info.value = level
+        info.func = function (...)
+            self:UI_OnLevelSelect(...)
+        end
+        UIDropDownMenu_AddButton(info)
+    end
+end
+
+function XPMon:UI_OnLevelSelect(frame, arg1, arg2, checked)
+    if (not checked) then
+        UIDropDownMenu_SetSelectedValue(UIDROPDOWNMENU_OPEN_MENU, frame.value)
+    end
+    XPMon:UI_ShowLevelInformation(frame.value)
+end
+
+function XPMon:UI_OnShow(frame)
+    XPMon:log("Showing frame", frame)
+end
+
+function XPMon:UI_OnTabClick(frame, tab)
+    if frame.selectedTab then
+        _G["XPMonFrameTabContent" .. frame.selectedTab]:Hide()
+    end
+    _G["XPMonFrameTabContent" .. tab]:Show()
+    PanelTemplates_SetTab(frame, tab)
+end
+------------------------------------------------------
+-- Addon slash command handlers
+------------------------------------------------------
+function XPMon:commandLEVEL(args)
     local totals = {}
     local level = args ~= "" and args or self.currentLevel
     local data = XPMon_DATA[tonumber(level)]
@@ -179,7 +224,7 @@ function XPMon:commandLevel(args)
                 total = stats.total
             })
         end
-        table.sort(totals, function (a, b)
+        table.sort(totals, function(a, b)
             return a.total > b.total
         end)
 
@@ -197,8 +242,16 @@ function XPMon:commandLevel(args)
     end
 end
 
-function XPMon:commandTotal()
+function XPMon:commandTOTAL()
     XPMonUtil.print("XPMon: coming soon...", XPMon.COLOURS.ERROR)
+end
+
+function XPMon:commandSHOW()
+    XPMonFrame:Show()
+end
+
+function XPMon:commandHIDE()
+    XPMonFrame:Hide()
 end
 
 ------------------------------------------------------
@@ -222,21 +275,15 @@ function SlashCmdList.XPMON(str, editBox)
     end
     if (command == "") then
         XPMonUtil.print("XPMon: usage", XPMon.COLOURS.SYSTEM)
-        XPMonUtil.print("/xpmon level - show XP information for the given level", XPMon.COLOURS.SYSTEM, 1)
-        XPMonUtil.print("/xpmon total - show total XP information for all levels", XPMon.COLOURS.SYSTEM, 1)
+        XPMonUtil.print("/xpmon level - print XP information for the given level", XPMon.COLOURS.SYSTEM, 1)
+        XPMonUtil.print("/xpmon total - print total XP information for all levels", XPMon.COLOURS.SYSTEM, 1)
+        XPMonUtil.print("/xpmon show - show XPMon UI", XPMon.COLOURS.SYSTEM, 1)
+        XPMonUtil.print("/xpmon hide - hide XPMon UI", XPMon.COLOURS.SYSTEM, 1)
         return
     end
-    if (XPMon.COMMANDS[command:upper()]) then
-        XPMon[XPMon.COMMANDS[command:upper()]](XPMon, args)
+    if (type(XPMon["command" .. command:upper()]) == "function") then
+        XPMon["command" .. command:upper()](XPMon, args)
     else
         XPMonUtil.print("XPMon: invalid command, " .. command, XPMon.COLOURS.ERROR)
     end
-end
-
-function XPMon_onLoad(self)
-    XPMon:onLoad(self)
-end
-
-function XPMon_onEvent(addon, event, ...)
-    XPMon:onEvent(addon, event, ...)
 end
