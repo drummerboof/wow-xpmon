@@ -1,0 +1,47 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ../../FrameXML/UI.xsd">
+    <Script File="XPMon.lua"/>
+
+    <Frame name="XPMonBar"
+           toplevel="true"
+           frameStrata="DIALOG"
+           movable="true"
+           enableMouse="true"
+           inherits="InsetFrameTemplate"
+           hidden="false"
+           parent="UIParent"
+           alpha="0.5">
+
+        <Size>
+            <AbsDimension x="400" y="20"/>
+        </Size>
+        <Anchors>
+            <Anchor point="CENTER"/>
+        </Anchors>
+
+        <Layers>
+
+        </Layers>
+
+        <Frames>
+
+        </Frames>
+
+        <Scripts>
+            <OnLoad>
+                self:RegisterForDrag("LeftButton")
+            </OnLoad>
+            <OnEvent>
+                XPMon:onEvent(self, event, ...)
+            </OnEvent>
+            <OnDragStart>
+                if(button == "LeftButton") then
+                    self:StartMoving()
+                end
+            </OnDragStart>
+            <OnDragStop>
+                self:StopMovingOrSizing()
+            </OnDragStop>
+        </Scripts>
+    </Frame>
+</Ui>

@@ -5,9 +5,9 @@ require("XPMon")
 require("XPMonUtils")
 
 XPMonFrameSelectLevel = {}
-UIDropDownMenu_SetText = spy.new(function ()  end)
+UIDropDownMenu_SetText = spy.new(function() end)
 XPMonTitleTextLevel = {
-    SetText = spy.new(function ()  end)
+    SetText = spy.new(function() end)
 }
 
 describe("XPMon Addon", function()
@@ -15,9 +15,10 @@ describe("XPMon Addon", function()
     local filters
 
     setup(function()
-        time = spy.new(function () return 100 end)
-        GetPlayerMapPosition = spy.new(function () return 0.5454, 0.6565 end)
+        time = spy.new(function() return 100 end)
+        GetPlayerMapPosition = spy.new(function() return 0.5454, 0.6565 end)
         assert:set_parameter("TableFormatLevel", 10)
+        GetXPExhaustion = spy.new(function () return 100 end)
 
         XPMon.currentLevel = 10
         filters = XPMon.filters
@@ -78,6 +79,12 @@ describe("XPMon Addon", function()
             end
         end)
 
+        it("Overwrites an existing nextXPGain if there is one", function()
+            XPMon.nextXPGain = "bob"
+            XPMon:onEvent(nil, "CHAT_MSG_SYSTEM", "args")
+            assert.are.same("gain", XPMon.nextXPGain)
+        end)
+
         it("Calls the appropirate event filter handlers for XP events CHAT_MSG_SYSTEM", function()
             XPMon:onEvent(nil, "CHAT_MSG_SYSTEM", "args")
 
@@ -123,9 +130,10 @@ describe("XPMon Addon", function()
             XPMon.currentXP = 100
             XPMon.currentXPRemaining = 200
             XPMon.currentLevel = 10
+            XPMon.currentXPRested = 100
             stub(XPMon, "addXPEventForLevel")
             stub(XPMon, "setCurrentPlayerInfo")
-            GetRealZoneText = spy.new(function ()
+            GetRealZoneText = spy.new(function()
                 return "Goldshire"
             end)
         end)
@@ -159,7 +167,8 @@ describe("XPMon Addon", function()
             assert.are.same({
                 source = "Unknown",
                 experience = 20,
-                rested = 0,
+                rested = true,
+                restedBonus = 0,
                 zone = "Goldshire",
                 position = { x = 54.54, y = 65.65 },
                 time = 100,
@@ -182,7 +191,8 @@ describe("XPMon Addon", function()
             assert.are.same({
                 source = "Unknown",
                 experience = 20,
-                rested = 0,
+                rested = true,
+                restedBonus = 0,
                 zone = "Goldshire",
                 position = { x = 54.54, y = 65.65 },
                 time = 100,
@@ -195,6 +205,7 @@ describe("XPMon Addon", function()
         end)
 
         it("Sets one known XP event if nextXPGain is set and we have not levelled up", function()
+            XPMon.currentXPRested = 0
             XPMon.nextXPGain = XPEvent:new({
                 source = "Quest",
                 details = {
@@ -215,7 +226,8 @@ describe("XPMon Addon", function()
             assert.are.same({
                 source = "Quest",
                 experience = 50,
-                rested = 0,
+                restedBonus = 0,
+                rested = false,
                 zone = "Goldshire",
                 position = { x = 54.54, y = 65.65 },
                 time = 100,
@@ -230,6 +242,7 @@ describe("XPMon Addon", function()
         end)
 
         it("Sets two unknown XP events if nextXPGain is not set and we have levelled up", function()
+            XPMon.currentXPRested = 100
             XPMon.currentXP = 190
             XPMon.currentXPRemaining = 10
 
@@ -246,7 +259,8 @@ describe("XPMon Addon", function()
             assert.are.same({
                 source = "Unknown",
                 experience = 10,
-                rested = 0,
+                rested = true,
+                restedBonus = 0,
                 zone = "Goldshire",
                 position = { x = 54.54, y = 65.65 },
                 time = 100,
@@ -256,7 +270,8 @@ describe("XPMon Addon", function()
             assert.are.same({
                 source = "Unknown",
                 experience = 40,
-                rested = 0,
+                rested = true,
+                restedBonus = 0,
                 zone = "Goldshire",
                 position = { x = 54.54, y = 65.65 },
                 time = 100,
@@ -273,7 +288,7 @@ describe("XPMon Addon", function()
             XPMon.currentXPRemaining = 10
             XPMon.nextXPGain = XPEvent:new({
                 source = "Mob Kill",
-                rested = 25,
+                restedBonus = 25,
                 details = {
                     mob = "A Mob"
                 }
@@ -292,7 +307,8 @@ describe("XPMon Addon", function()
             assert.are.same({
                 source = "Mob Kill",
                 experience = 10,
-                rested = 0,
+                rested = true,
+                restedBonus = 0,
                 zone = "Goldshire",
                 position = { x = 54.54, y = 65.65 },
                 time = 100,
@@ -304,7 +320,8 @@ describe("XPMon Addon", function()
             assert.are.same({
                 source = "Mob Kill",
                 experience = 40,
-                rested = 25,
+                restedBonus = 25,
+                rested = true,
                 zone = "Goldshire",
                 position = { x = 54.54, y = 65.65 },
                 time = 100,
@@ -323,7 +340,8 @@ describe("XPMon Addon", function()
             XPMon.currentXPRemaining = 35
             XPMon.nextXPGain = XPEvent:new({
                 source = "Mob Kill",
-                rested = 25,
+                rested = true,
+                restedBonus = 25,
                 details = {
                     mob = "A Mob"
                 }
@@ -342,7 +360,8 @@ describe("XPMon Addon", function()
             assert.are.same({
                 source = "Mob Kill",
                 experience = 35,
-                rested = 10,
+                restedBonus = 10,
+                rested = true,
                 zone = "Goldshire",
                 position = { x = 54.54, y = 65.65 },
                 time = 100,
@@ -354,7 +373,8 @@ describe("XPMon Addon", function()
             assert.are.same({
                 source = "Mob Kill",
                 experience = 25,
-                rested = 15,
+                restedBonus = 15,
+                rested = true,
                 zone = "Goldshire",
                 position = { x = 54.54, y = 65.65 },
                 time = 100,
@@ -371,28 +391,36 @@ describe("XPMon Addon", function()
 
     describe("XPMon:setCurrentPlayerInfo", function()
 
-        it("Sets the XP, remaining XP, level and nextXPGain correctly", function()
+        it("Sets the XP, remaining XP, level, rested XP and nextXPGain correctly", function()
             UnitXP = spy.new(function()
                 return 100
             end)
             UnitXPMax = spy.new(function()
                 return 250
             end)
+            GetXPExhaustion = spy.new(function()
+                return 500
+            end)
             UnitLevel = spy.new(function()
                 return 10
             end)
 
             XPMon.nextXPGain = {}
-            XPMon.nextXPGainDiscovered = 100
+            XPMon.currentXP = 0
+            XPMon.currentXPRested = 0
+            XPMon.currentLevel = 0
+            XPMon.currentXPRemaining = 0
             XPMon:setCurrentPlayerInfo()
 
             assert.stub(UnitXP).was_called_with("player")
             assert.stub(UnitXPMax).was_called_with("player")
             assert.stub(UnitLevel).was_called_with("player")
+            assert.stub(GetXPExhaustion).was_called_with("player")
 
             assert.are.equal(XPMon.currentXP, 100)
             assert.are.equal(XPMon.currentXPRemaining, 150)
             assert.are.equal(XPMon.currentLevel, 10)
+            assert.are.equal(XPMon.currentXPRested, 500)
             assert.are.equal(XPMon.nextXPGain, nil)
 
             UnitXP:revert()
@@ -412,7 +440,7 @@ describe("XPMon Addon", function()
             XPMon:addXPEventForLevel(10, XPEvent:new({
                 source = "Quest",
                 experience = 200,
-                rested = 0,
+                restedBonus = 0,
                 details = {
                     quest = "A quest"
                 }
@@ -424,12 +452,13 @@ describe("XPMon Addon", function()
                     max = 2500,
                     data = {
                         Quest = {
+                            keys = {},
                             total = 200,
                             events = {
                                 {
                                     time = 100,
                                     experience = 200,
-                                    rested = 0,
+                                    restedBonus = 0,
                                     details = {
                                         quest = "A quest"
                                     }
@@ -443,7 +472,7 @@ describe("XPMon Addon", function()
             XPMon:addXPEventForLevel(10, XPEvent:new({
                 source = "Mob Kill",
                 experience = 50,
-                rested = 25,
+                restedBonus = 25,
                 details = {
                     quest = "A mob"
                 }
@@ -455,12 +484,13 @@ describe("XPMon Addon", function()
                     max = 2500,
                     data = {
                         ["Quest"] = {
+                            keys = {},
                             total = 200,
                             events = {
                                 {
                                     time = 100,
                                     experience = 200,
-                                    rested = 0,
+                                    restedBonus = 0,
                                     details = {
                                         quest = "A quest"
                                     }
@@ -468,12 +498,13 @@ describe("XPMon Addon", function()
                             }
                         },
                         ["Mob Kill"] = {
+                            keys = {},
                             total = 50,
                             events = {
                                 {
                                     time = 100,
                                     experience = 50,
-                                    rested = 25,
+                                    restedBonus = 25,
                                     details = {
                                         quest = "A mob"
                                     }
@@ -487,7 +518,7 @@ describe("XPMon Addon", function()
             XPMon:addXPEventForLevel(10, XPEvent:new({
                 source = "Mob Kill",
                 experience = 100,
-                rested = 50,
+                restedBonus = 50,
                 details = {
                     quest = "Another mob"
                 }
@@ -499,12 +530,13 @@ describe("XPMon Addon", function()
                     max = 2500,
                     data = {
                         ["Quest"] = {
+                            keys = {},
                             total = 200,
                             events = {
                                 {
                                     time = 100,
                                     experience = 200,
-                                    rested = 0,
+                                    restedBonus = 0,
                                     details = {
                                         quest = "A quest"
                                     }
@@ -512,12 +544,13 @@ describe("XPMon Addon", function()
                             }
                         },
                         ["Mob Kill"] = {
+                            keys = {},
                             total = 150,
                             events = {
                                 {
                                     time = 100,
                                     experience = 50,
-                                    rested = 25,
+                                    restedBonus = 25,
                                     details = {
                                         quest = "A mob"
                                     }
@@ -525,7 +558,7 @@ describe("XPMon Addon", function()
                                 {
                                     time = 100,
                                     experience = 100,
-                                    rested = 50,
+                                    restedBonus = 50,
                                     details = {
                                         quest = "Another mob"
                                     }
@@ -537,6 +570,91 @@ describe("XPMon Addon", function()
             }, XPMon_DATA)
 
             UnitXPMax:revert()
+        end)
+
+        it("Saves XP events under the key if provided", function()
+            XPMon_DATA = {}
+            UnitXPMax = spy.new(function()
+                return 2500
+            end)
+
+            XPMon:addXPEventForLevel(10, XPEvent:new({
+                source = "Quest",
+                experience = 200,
+                restedBonus = 0,
+                details = {
+                    anything = "here"
+                }
+            }))
+
+            XPMon:addXPEventForLevel(10, XPEvent:new({
+                source = "Dungeons",
+                key = "rewards",
+                experience = 200,
+                restedBonus = 0,
+                details = {
+                    anything = "here"
+                }
+            }))
+
+            XPMon:addXPEventForLevel(10, XPEvent:new({
+                source = "Dungeons",
+                key = "kills",
+                experience = 100,
+                restedBonus = 50,
+                details = {
+                    anything = "here"
+                }
+            }))
+
+            assert.are.same({
+                [10] = {
+                    total = 500,
+                    max = 2500,
+                    data = {
+                        ["Quest"] = {
+                            total = 200,
+                            keys = {},
+                            events = {
+                                {
+                                    time = 100,
+                                    experience = 200,
+                                    restedBonus = 0,
+                                    details = {
+                                        anything = "here"
+                                    }
+                                }
+                            }
+                        },
+                        ["Dungeons"] = {
+                            total = 300,
+                            keys = { rewards = true, kills = true },
+                            events = {
+                                rewards = {
+                                    {
+                                        time = 100,
+                                        experience = 200,
+                                        restedBonus = 0,
+                                        details = {
+                                            anything = "here"
+                                        }
+                                    }
+                                },
+                                kills = {
+                                    {
+                                        time = 100,
+                                        experience = 100,
+                                        restedBonus = 50,
+                                        details = {
+                                            anything = "here"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }, XPMon_DATA)
         end)
     end)
 end)

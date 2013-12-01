@@ -8,7 +8,7 @@ function XPEvent:new(vars)
     local _defaults = {
         source = "Unknown",
         experience = 0,
-        rested = 0,
+        restedBonus = 0,
         details = {}
     }
     local instance = {

@@ -9,3 +9,4 @@ XPEvent.lua
 XPMonFilters.lua
 XPMon.lua
 XPMon.xml
+XPMonBar.xml

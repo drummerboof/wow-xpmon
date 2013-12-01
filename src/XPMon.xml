@@ -7,7 +7,7 @@
             <Anchor point="TOPLEFT"/>
             <Anchor point="BOTTOMRIGHT"/>
         </Anchors>
-        <Backdrop bgFile="Interface\Tooltips\UI-Tooltip-Background" tile="true">
+        <Backdrop bgFile="Interface\ChatFrame\ChatFrameBackground" tile="true">
             <TileSize val="16" />
             <Color r="0" g="0" b="0" a="1" />
         </Backdrop>
@@ -19,11 +19,11 @@
            movable="true"
            enableMouse="true"
            inherits="ButtonFrameTemplate"
-           hidden="false"
+           hidden="true"
            parent="UIParent">
 
         <Size>
-            <AbsDimension x="450" y="550"/>
+            <AbsDimension x="800" y="550"/>
         </Size>
         <Anchors>
             <Anchor point="CENTER"/>
@@ -147,10 +147,90 @@
                                     </OnClick>
                                 </Scripts>
                             </Button>
+                            <Button name="$parentTab3" inherits="TabButtonTemplate" id="3" text="Dungeons">
+                                <Anchors>
+                                    <Anchor point="LEFT" relativeTo="$parentTab2" relativePoint="RIGHT" />
+                                </Anchors>
+                                <Scripts>
+                                    <OnClick>
+                                        XPMon:UI_OnTabClick(XPMonFrameTabButtons, self:GetID())
+                                    </OnClick>
+                                </Scripts>
+                            </Button>
+                            <Button name="$parentTab4" inherits="TabButtonTemplate" id="4" text="Exploration">
+                                <Anchors>
+                                    <Anchor point="LEFT" relativeTo="$parentTab3" relativePoint="RIGHT" />
+                                </Anchors>
+                                <Scripts>
+                                    <OnClick>
+                                        XPMon:UI_OnTabClick(XPMonFrameTabButtons, self:GetID())
+                                    </OnClick>
+                                </Scripts>
+                            </Button>
+                            <Button name="$parentTab5" inherits="TabButtonTemplate" id="5" text="Professions">
+                                <Anchors>
+                                    <Anchor point="LEFT" relativeTo="$parentTab4" relativePoint="RIGHT" />
+                                </Anchors>
+                                <Scripts>
+                                    <OnClick>
+                                        XPMon:UI_OnTabClick(XPMonFrameTabButtons, self:GetID())
+                                    </OnClick>
+                                </Scripts>
+                            </Button>
+                            <Button name="$parentTab6" inherits="TabButtonTemplate" id="6" text="Pet Battles">
+                                <Anchors>
+                                    <Anchor point="LEFT" relativeTo="$parentTab5" relativePoint="RIGHT" />
+                                </Anchors>
+                                <Scripts>
+                                    <OnClick>
+                                        XPMon:UI_OnTabClick(XPMonFrameTabButtons, self:GetID())
+                                    </OnClick>
+                                </Scripts>
+                            </Button>
+                            <Button name="$parentTab7" inherits="TabButtonTemplate" id="7" text="PvP">
+                                <Anchors>
+                                    <Anchor point="LEFT" relativeTo="$parentTab6" relativePoint="RIGHT" />
+                                </Anchors>
+                                <Scripts>
+                                    <OnClick>
+                                        XPMon:UI_OnTabClick(XPMonFrameTabButtons, self:GetID())
+                                    </OnClick>
+                                </Scripts>
+                            </Button>
+                            <Button name="$parentTab8" inherits="TabButtonTemplate" id="8" text="Unknown">
+                                <Anchors>
+                                    <Anchor point="LEFT" relativeTo="$parentTab7" relativePoint="RIGHT" />
+                                </Anchors>
+                                <Scripts>
+                                    <OnClick>
+                                        XPMon:UI_OnTabClick(XPMonFrameTabButtons, self:GetID())
+                                    </OnClick>
+                                </Scripts>
+                            </Button>
+                            <Button name="$parentTab9" inherits="TabButtonTemplate" id="9" text="Zones">
+                                <Anchors>
+                                    <Anchor point="LEFT" relativeTo="$parentTab8" relativePoint="RIGHT" />
+                                </Anchors>
+                                <Scripts>
+                                    <OnClick>
+                                        XPMon:UI_OnTabClick(XPMonFrameTabButtons, self:GetID())
+                                    </OnClick>
+                                </Scripts>
+                            </Button>
+                            <Button name="$parentTab10" inherits="TabButtonTemplate" id="10" text="Levels">
+                                <Anchors>
+                                    <Anchor point="LEFT" relativeTo="$parentTab9" relativePoint="RIGHT" />
+                                </Anchors>
+                                <Scripts>
+                                    <OnClick>
+                                        XPMon:UI_OnTabClick(XPMonFrameTabButtons, self:GetID())
+                                    </OnClick>
+                                </Scripts>
+                            </Button>
                         </Frames>
                         <Scripts>
                             <OnLoad>
-                                PanelTemplates_SetNumTabs(XPMonFrameTabButtons, 2)
+                                PanelTemplates_SetNumTabs(XPMonFrameTabButtons, 10)
                             </OnLoad>
                         </Scripts>
                     </Frame>

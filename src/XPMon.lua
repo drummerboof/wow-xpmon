@@ -6,6 +6,7 @@ XPMon = XPMon or {}
 
 XPMon.DEBUG = true
 XPMon.NAME = "XPMon"
+XPMon.LEVEL_CAP = 90
 XPMon.XP_GAIN_TIMEOUT = 5
 XPMon.COLOURS = {
     SYSTEM = "ffff00",
@@ -28,6 +29,7 @@ XPMon.EVENT_HANDLERS = {
 
 XPMon.nextXPGain = nil
 XPMon.currentXP = nil
+XPMon.currentXPRested = 100
 XPMon.currentXPRemaining = nil
 XPMon.currentLevel = nil
 
@@ -59,15 +61,16 @@ function XPMon:onPlayerLogin(event)
     self:UI_ShowLevelInformation(self.currentLevel)
 end
 
-function XPMon:onEvent(addon, event, ...)
-    XPMon:log(addon, event)
+function XPMon:onEvent(frame, event, ...)
+    local xpGain
     -- XP related event here
     if self.EVENTS_XP[event] ~= nil then
         for key, value in pairs(self.filters) do
             if value.events[event] ~= nil then
-                self.nextXPGain = value.handler(event, ...)
+                xpGain = value.handler(event, ...)
             end
-            if self.nextXPGain ~= nil then
+            if xpGain ~= nil then
+                self.nextXPGain = xpGain
                 break
             end
         end
@@ -97,6 +100,7 @@ function XPMon:onPlayerXPUpdate()
 
     xpEventCurrentLevel = self.nextXPGain or XPEvent:new()
     xpEventCurrentLevel:set("zone", GetRealZoneText())
+    xpEventCurrentLevel:set("rested", self.currentXPRested > 0)
     xpEventCurrentLevel:set("position", {
         x = XPMonUtil.round(x * 100, 2),
         y = XPMonUtil.round(y * 100, 2)
@@ -110,24 +114,25 @@ function XPMon:onPlayerXPUpdate()
 
         xpEventCurrentLevel:set("experience", UnitXP("player"))
 
-        if xpEventCurrentLevel:get("rested") > 0 then
-            xpEventPrevLevel:set("rested", math.max(0, xpEventPrevLevel:get("experience") - xpEventPrevLevel:get("rested")))
-            xpEventCurrentLevel:set("rested", xpEventCurrentLevel:get("rested") - xpEventPrevLevel:get("rested"))
+        if xpEventCurrentLevel:get("restedBonus") > 0 then
+            xpEventPrevLevel:set("restedBonus", math.max(0, xpEventPrevLevel:get("experience") - xpEventPrevLevel:get("restedBonus")))
+            xpEventCurrentLevel:set("restedBonus", xpEventCurrentLevel:get("restedBonus") - xpEventPrevLevel:get("restedBonus"))
         end
 
-        XPMon:log("Saving XP event for previous level: ", xpEventPrevLevel:get("source"), xpEventPrevLevel:get("experience"), xpEventPrevLevel:get("rested"))
+        XPMon:log("Saving XP event for previous level: ", xpEventPrevLevel:get("source"), xpEventPrevLevel:get("experience"), xpEventPrevLevel:get("restedBonus"))
         XPMon:addXPEventForLevel(self.currentLevel, xpEventPrevLevel)
     else
         xpEventCurrentLevel:set("experience", UnitXP("player") - self.currentXP)
     end
 
-    XPMon:log("Saving XP event for current level: ", xpEventCurrentLevel:get("source"), xpEventCurrentLevel:get("experience"), xpEventCurrentLevel:get("rested"))
+    XPMon:log("Saving XP event for current level: ", xpEventCurrentLevel:get("source"), xpEventCurrentLevel:get("experience"), xpEventCurrentLevel:get("restedBonus"))
     XPMon:addXPEventForLevel(UnitLevel("player"), xpEventCurrentLevel)
 
     XPMon:setCurrentPlayerInfo()
 end
 
 function XPMon:addXPEventForLevel(level, event)
+    local insert
     local source = event:get("source")
     event:unset("source")
 
@@ -140,17 +145,28 @@ function XPMon:addXPEventForLevel(level, event)
     end
     if XPMon_DATA[level].data[source] == nil then
         XPMon_DATA[level].data[source] = {
+            keys = {},
             total = 0,
             events = {}
         }
     end
-    table.insert(XPMon_DATA[level].data[source].events, event:data())
+    insert = XPMon_DATA[level].data[source].events
+    if event:get("key") then
+        if XPMon_DATA[level].data[source].keys[event:get("key")] == nil then
+            XPMon_DATA[level].data[source].keys[event:get("key")] = true
+            XPMon_DATA[level].data[source].events[event:get("key")] = {}
+        end
+        insert = XPMon_DATA[level].data[source].events[event:get("key")]
+        event:unset("key")
+    end
+    table.insert(insert, event:data())
     XPMon_DATA[level].total = XPMon_DATA[level].total + event:get("experience")
     XPMon_DATA[level].data[source].total = XPMon_DATA[level].data[source].total + event:get("experience")
 end
 
 function XPMon:setCurrentPlayerInfo()
     self.currentXP = UnitXP("player")
+    self.currentXPRested = GetXPExhaustion("player")
     self.currentXPRemaining = UnitXPMax("player") - self.currentXP
     self.currentLevel = UnitLevel("player")
     self.nextXPGain = nil
@@ -167,7 +183,6 @@ end
 -- UI Stuff
 ------------------------------------------------------
 function XPMon:UI_ShowLevelInformation(level)
-    print("Showing info for " .. level)
     XPMonFrameSelectLevel.selectedValue = level
     XPMonFrameSelectLevel.selectedName = "Level " .. level
     UIDropDownMenu_SetText(XPMonFrameSelectLevel, XPMonFrameSelectLevel.selectedName)
