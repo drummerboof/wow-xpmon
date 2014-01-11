@@ -1,6 +1,7 @@
 package.path = package.path .. "../../?.lua"
 require("XPMonFilters")
 require("XPEvent")
+require("XPMonDataAccessor")
 require("XPMon")
 require("XPMonUtils")
 
@@ -131,7 +132,7 @@ describe("XPMon Addon", function()
             XPMon.currentXPRemaining = 200
             XPMon.currentLevel = 10
             XPMon.currentXPRested = 100
-            stub(XPMon, "addXPEventForLevel")
+            stub(XPMonDataAccessor, "addXPEventForLevel")
             stub(XPMon, "setCurrentPlayerInfo")
             GetRealZoneText = spy.new(function()
                 return "Goldshire"
@@ -142,7 +143,7 @@ describe("XPMon Addon", function()
             UnitXP:revert()
             UnitLevel:revert()
             XPMon.setCurrentPlayerInfo:revert()
-            XPMon.addXPEventForLevel:revert()
+            XPMonDataAccessor.addXPEventForLevel:revert()
         end)
 
         it("Unsets the current XP event if it occured more that XP_GAIN_TIMEOUT seconds ago", function()
@@ -163,7 +164,7 @@ describe("XPMon Addon", function()
 
             XPMon:onPlayerXPUpdate()
 
-            assert.stub(XPMon.addXPEventForLevel).was_called(1)
+            assert.stub(XPMonDataAccessor.addXPEventForLevel).was_called(1)
             assert.are.same({
                 source = "Unknown",
                 experience = 20,
@@ -173,7 +174,7 @@ describe("XPMon Addon", function()
                 position = { x = 54.54, y = 65.65 },
                 time = 100,
                 details = {}
-            }, XPMon.addXPEventForLevel.calls[1][3]:data())
+            }, XPMonDataAccessor.addXPEventForLevel.calls[1][4]:data())
         end)
 
         it("Sets one unknown XP event if nextXPGain is nil and we have not levelled up", function()
@@ -187,7 +188,7 @@ describe("XPMon Addon", function()
 
             XPMon:onPlayerXPUpdate()
 
-            assert.stub(XPMon.addXPEventForLevel).was_called(1)
+            assert.stub(XPMonDataAccessor.addXPEventForLevel).was_called(1)
             assert.are.same({
                 source = "Unknown",
                 experience = 20,
@@ -197,8 +198,8 @@ describe("XPMon Addon", function()
                 position = { x = 54.54, y = 65.65 },
                 time = 100,
                 details = {}
-            }, XPMon.addXPEventForLevel.calls[1][3]:data())
-            assert.are.equal(XPMon.addXPEventForLevel.calls[1][2], 10)
+            }, XPMonDataAccessor.addXPEventForLevel.calls[1][4]:data())
+            assert.are.equal(XPMonDataAccessor.addXPEventForLevel.calls[1][3], 10)
             assert.stub(XPMon.setCurrentPlayerInfo).was_called()
             assert.stub(UnitXP).was_called_with("player")
             assert.stub(UnitLevel).was_called_with("player")
@@ -222,7 +223,7 @@ describe("XPMon Addon", function()
 
             XPMon:onPlayerXPUpdate()
 
-            assert.stub(XPMon.addXPEventForLevel).was_called(1)
+            assert.stub(XPMonDataAccessor.addXPEventForLevel).was_called(1)
             assert.are.same({
                 source = "Quest",
                 experience = 50,
@@ -234,8 +235,8 @@ describe("XPMon Addon", function()
                 details = {
                     quest = "A Quest"
                 }
-            }, XPMon.addXPEventForLevel.calls[1][3]:data())
-            assert.are.equal(XPMon.addXPEventForLevel.calls[1][2], 10)
+            }, XPMonDataAccessor.addXPEventForLevel.calls[1][4]:data())
+            assert.are.equal(XPMonDataAccessor.addXPEventForLevel.calls[1][3], 10)
             assert.stub(XPMon.setCurrentPlayerInfo).was_called()
             assert.stub(UnitXP).was_called_with("player")
             assert.stub(UnitLevel).was_called_with("player")
@@ -255,7 +256,7 @@ describe("XPMon Addon", function()
 
             XPMon:onPlayerXPUpdate()
 
-            assert.stub(XPMon.addXPEventForLevel).was_called(2)
+            assert.stub(XPMonDataAccessor.addXPEventForLevel).was_called(2)
             assert.are.same({
                 source = "Unknown",
                 experience = 10,
@@ -265,8 +266,8 @@ describe("XPMon Addon", function()
                 position = { x = 54.54, y = 65.65 },
                 time = 100,
                 details = {}
-            }, XPMon.addXPEventForLevel.calls[1][3]:data())
-            assert.are.equal(XPMon.addXPEventForLevel.calls[1][2], 10)
+            }, XPMonDataAccessor.addXPEventForLevel.calls[1][4]:data())
+            assert.are.equal(XPMonDataAccessor.addXPEventForLevel.calls[1][3], 10)
             assert.are.same({
                 source = "Unknown",
                 experience = 40,
@@ -276,8 +277,8 @@ describe("XPMon Addon", function()
                 position = { x = 54.54, y = 65.65 },
                 time = 100,
                 details = {}
-            }, XPMon.addXPEventForLevel.calls[2][3]:data())
-            assert.are.equal(XPMon.addXPEventForLevel.calls[2][2], 11)
+            }, XPMonDataAccessor.addXPEventForLevel.calls[2][4]:data())
+            assert.are.equal(XPMonDataAccessor.addXPEventForLevel.calls[2][3], 11)
             assert.stub(XPMon.setCurrentPlayerInfo).was_called()
             assert.stub(UnitXP).was_called_with("player")
             assert.stub(UnitLevel).was_called_with("player")
@@ -303,7 +304,7 @@ describe("XPMon Addon", function()
 
             XPMon:onPlayerXPUpdate()
 
-            assert.stub(XPMon.addXPEventForLevel).was_called(2)
+            assert.stub(XPMonDataAccessor.addXPEventForLevel).was_called(2)
             assert.are.same({
                 source = "Mob Kill",
                 experience = 10,
@@ -315,8 +316,8 @@ describe("XPMon Addon", function()
                 details = {
                     mob = "A Mob"
                 }
-            }, XPMon.addXPEventForLevel.calls[1][3]:data())
-            assert.are.equal(XPMon.addXPEventForLevel.calls[1][2], 10)
+            }, XPMonDataAccessor.addXPEventForLevel.calls[1][4]:data())
+            assert.are.equal(XPMonDataAccessor.addXPEventForLevel.calls[1][3], 10)
             assert.are.same({
                 source = "Mob Kill",
                 experience = 40,
@@ -328,8 +329,8 @@ describe("XPMon Addon", function()
                 details = {
                     mob = "A Mob"
                 }
-            }, XPMon.addXPEventForLevel.calls[2][3]:data())
-            assert.are.equal(XPMon.addXPEventForLevel.calls[2][2], 11)
+            }, XPMonDataAccessor.addXPEventForLevel.calls[2][4]:data())
+            assert.are.equal(XPMonDataAccessor.addXPEventForLevel.calls[2][3], 11)
             assert.stub(XPMon.setCurrentPlayerInfo).was_called()
             assert.stub(UnitXP).was_called_with("player")
             assert.stub(UnitLevel).was_called_with("player")
@@ -356,7 +357,7 @@ describe("XPMon Addon", function()
 
             XPMon:onPlayerXPUpdate()
 
-            assert.stub(XPMon.addXPEventForLevel).was_called(2)
+            assert.stub(XPMonDataAccessor.addXPEventForLevel).was_called(2)
             assert.are.same({
                 source = "Mob Kill",
                 experience = 35,
@@ -368,8 +369,8 @@ describe("XPMon Addon", function()
                 details = {
                     mob = "A Mob"
                 }
-            }, XPMon.addXPEventForLevel.calls[1][3]:data())
-            assert.are.equal(XPMon.addXPEventForLevel.calls[1][2], 10)
+            }, XPMonDataAccessor.addXPEventForLevel.calls[1][4]:data())
+            assert.are.equal(XPMonDataAccessor.addXPEventForLevel.calls[1][3], 10)
             assert.are.same({
                 source = "Mob Kill",
                 experience = 25,
@@ -381,8 +382,8 @@ describe("XPMon Addon", function()
                 details = {
                     mob = "A Mob"
                 }
-            }, XPMon.addXPEventForLevel.calls[2][3]:data())
-            assert.are.equal(XPMon.addXPEventForLevel.calls[2][2], 11)
+            }, XPMonDataAccessor.addXPEventForLevel.calls[2][4]:data())
+            assert.are.equal(XPMonDataAccessor.addXPEventForLevel.calls[2][3], 11)
             assert.stub(XPMon.setCurrentPlayerInfo).was_called()
             assert.stub(UnitXP).was_called_with("player")
             assert.stub(UnitLevel).was_called_with("player")
@@ -429,232 +430,4 @@ describe("XPMon Addon", function()
         end)
     end)
 
-    describe("XPMon:addXPEventForLevel", function()
-
-        it("Correctly saves the XP event", function()
-            XPMon_DATA = {}
-            UnitXPMax = spy.new(function()
-                return 2500
-            end)
-
-            XPMon:addXPEventForLevel(10, XPEvent:new({
-                source = "Quest",
-                experience = 200,
-                restedBonus = 0,
-                details = {
-                    quest = "A quest"
-                }
-            }))
-
-            assert.are.same({
-                [10] = {
-                    total = 200,
-                    max = 2500,
-                    data = {
-                        Quest = {
-                            keys = {},
-                            total = 200,
-                            events = {
-                                {
-                                    time = 100,
-                                    experience = 200,
-                                    restedBonus = 0,
-                                    details = {
-                                        quest = "A quest"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }, XPMon_DATA)
-
-            XPMon:addXPEventForLevel(10, XPEvent:new({
-                source = "Mob Kill",
-                experience = 50,
-                restedBonus = 25,
-                details = {
-                    quest = "A mob"
-                }
-            }))
-
-            assert.are.same({
-                [10] = {
-                    total = 250,
-                    max = 2500,
-                    data = {
-                        ["Quest"] = {
-                            keys = {},
-                            total = 200,
-                            events = {
-                                {
-                                    time = 100,
-                                    experience = 200,
-                                    restedBonus = 0,
-                                    details = {
-                                        quest = "A quest"
-                                    }
-                                }
-                            }
-                        },
-                        ["Mob Kill"] = {
-                            keys = {},
-                            total = 50,
-                            events = {
-                                {
-                                    time = 100,
-                                    experience = 50,
-                                    restedBonus = 25,
-                                    details = {
-                                        quest = "A mob"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }, XPMon_DATA)
-
-            XPMon:addXPEventForLevel(10, XPEvent:new({
-                source = "Mob Kill",
-                experience = 100,
-                restedBonus = 50,
-                details = {
-                    quest = "Another mob"
-                }
-            }))
-
-            assert.are.same({
-                [10] = {
-                    total = 350,
-                    max = 2500,
-                    data = {
-                        ["Quest"] = {
-                            keys = {},
-                            total = 200,
-                            events = {
-                                {
-                                    time = 100,
-                                    experience = 200,
-                                    restedBonus = 0,
-                                    details = {
-                                        quest = "A quest"
-                                    }
-                                }
-                            }
-                        },
-                        ["Mob Kill"] = {
-                            keys = {},
-                            total = 150,
-                            events = {
-                                {
-                                    time = 100,
-                                    experience = 50,
-                                    restedBonus = 25,
-                                    details = {
-                                        quest = "A mob"
-                                    }
-                                },
-                                {
-                                    time = 100,
-                                    experience = 100,
-                                    restedBonus = 50,
-                                    details = {
-                                        quest = "Another mob"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }, XPMon_DATA)
-
-            UnitXPMax:revert()
-        end)
-
-        it("Saves XP events under the key if provided", function()
-            XPMon_DATA = {}
-            UnitXPMax = spy.new(function()
-                return 2500
-            end)
-
-            XPMon:addXPEventForLevel(10, XPEvent:new({
-                source = "Quest",
-                experience = 200,
-                restedBonus = 0,
-                details = {
-                    anything = "here"
-                }
-            }))
-
-            XPMon:addXPEventForLevel(10, XPEvent:new({
-                source = "Dungeons",
-                key = "rewards",
-                experience = 200,
-                restedBonus = 0,
-                details = {
-                    anything = "here"
-                }
-            }))
-
-            XPMon:addXPEventForLevel(10, XPEvent:new({
-                source = "Dungeons",
-                key = "kills",
-                experience = 100,
-                restedBonus = 50,
-                details = {
-                    anything = "here"
-                }
-            }))
-
-            assert.are.same({
-                [10] = {
-                    total = 500,
-                    max = 2500,
-                    data = {
-                        ["Quest"] = {
-                            total = 200,
-                            keys = {},
-                            events = {
-                                {
-                                    time = 100,
-                                    experience = 200,
-                                    restedBonus = 0,
-                                    details = {
-                                        anything = "here"
-                                    }
-                                }
-                            }
-                        },
-                        ["Dungeons"] = {
-                            total = 300,
-                            keys = { rewards = true, kills = true },
-                            events = {
-                                rewards = {
-                                    {
-                                        time = 100,
-                                        experience = 200,
-                                        restedBonus = 0,
-                                        details = {
-                                            anything = "here"
-                                        }
-                                    }
-                                },
-                                kills = {
-                                    {
-                                        time = 100,
-                                        experience = 100,
-                                        restedBonus = 50,
-                                        details = {
-                                            anything = "here"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }, XPMon_DATA)
-        end)
-    end)
 end)

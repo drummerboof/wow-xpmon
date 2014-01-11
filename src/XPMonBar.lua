@@ -1,4 +1,4 @@
-XPMonBar = XPMonBar or {}
+XPMonBar = {}
 
 function XPMonBar:onLoad(addon)
     print('bar')

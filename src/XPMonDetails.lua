@@ -1,4 +1,4 @@
-XPMonDetails = XPMonDetails or {}
+XPMonDetails = {}
 
 function XPMonDetails:onLoad(addon)
 

@@ -8,6 +8,7 @@
 XPMonUtils.lua
 XPEvent.lua
 XPMonFilters.lua
+XPMonDataAccessor.lua
 
 XPMonBar.lua
 XPMonDetails.lua

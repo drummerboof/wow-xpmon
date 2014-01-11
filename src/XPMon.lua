@@ -119,48 +119,15 @@ function XPMon:onPlayerXPUpdate()
         end
 
         XPMon:log("Saving XP event for previous level: ", xpEventPrevLevel:get("source"), xpEventPrevLevel:get("experience"), xpEventPrevLevel:get("restedBonus"))
-        XPMon:addXPEventForLevel(self.currentLevel, xpEventPrevLevel)
+        XPMonDataAccessor:addXPEventForLevel(XPMon_DATA, self.currentLevel, xpEventPrevLevel)
     else
         xpEventCurrentLevel:set("experience", UnitXP("player") - self.currentXP)
     end
 
     XPMon:log("Saving XP event for current level: ", xpEventCurrentLevel:get("source"), xpEventCurrentLevel:get("experience"), xpEventCurrentLevel:get("restedBonus"))
-    XPMon:addXPEventForLevel(UnitLevel("player"), xpEventCurrentLevel)
+    XPMonDataAccessor:addXPEventForLevel(XPMon_DATA, UnitLevel("player"), xpEventCurrentLevel)
 
     XPMon:setCurrentPlayerInfo()
-end
-
-function XPMon:addXPEventForLevel(level, event)
-    local insert
-    local source = event:get("source")
-    event:unset("source")
-
-    if XPMon_DATA[level] == nil then
-        XPMon_DATA[level] = {
-            total = 0,
-            max = UnitXPMax("player"),
-            data = {}
-        }
-    end
-    if XPMon_DATA[level].data[source] == nil then
-        XPMon_DATA[level].data[source] = {
-            keys = {},
-            total = 0,
-            events = {}
-        }
-    end
-    insert = XPMon_DATA[level].data[source].events
-    if event:get("key") then
-        if XPMon_DATA[level].data[source].keys[event:get("key")] == nil then
-            XPMon_DATA[level].data[source].keys[event:get("key")] = true
-            XPMon_DATA[level].data[source].events[event:get("key")] = {}
-        end
-        insert = XPMon_DATA[level].data[source].events[event:get("key")]
-        event:unset("key")
-    end
-    table.insert(insert, event:data())
-    XPMon_DATA[level].total = XPMon_DATA[level].total + event:get("experience")
-    XPMon_DATA[level].data[source].total = XPMon_DATA[level].data[source].total + event:get("experience")
 end
 
 function XPMon:setCurrentPlayerInfo()
@@ -233,8 +200,8 @@ SlashCmdList = SlashCmdList or {}
 SLASH_XPMON1 = '/xpmon'
 
 -- XPMon saved data
-XPMon_DATA = {}
-XPMon_USER_CONFIG = {}
+XPMon_DATA = XPMon_DATA or {}
+XPMon_USER_CONFIG = XPMon_USER_CONFIG or {}
 
 -- Slash command handler
 function SlashCmdList.XPMON(str, editBox)
