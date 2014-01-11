@@ -1,7 +1,5 @@
 XPMonDataAccessor = {}
 
-XPMonDataAccessor = {}
-
 --- addXPEventForLevel
 -- @param level The character level for which the event should be added
 -- @param event The XP event object
