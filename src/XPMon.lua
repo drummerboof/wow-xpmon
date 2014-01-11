@@ -58,7 +58,6 @@ end
 
 function XPMon:onPlayerLogin(event)
     self:setCurrentPlayerInfo()
-    self:UI_ShowLevelInformation(self.currentLevel)
 end
 
 function XPMon:onEvent(frame, event, ...)
@@ -180,51 +179,6 @@ function XPMon:log(...)
 end
 
 ------------------------------------------------------
--- UI Stuff
-------------------------------------------------------
-function XPMon:UI_ShowLevelInformation(level)
-    XPMonFrameSelectLevel.selectedValue = level
-    XPMonFrameSelectLevel.selectedName = "Level " .. level
-    UIDropDownMenu_SetText(XPMonFrameSelectLevel, XPMonFrameSelectLevel.selectedName)
-    XPMonTitleTextLevel:SetText(level)
-end
-
-function XPMon:UI_InitLevelSelect(frame)
-    local levels = {}
-    for level, info in pairs(XPMon_DATA) do
-        table.insert(levels, level)
-    end
-    table.sort(levels, function (a, b) return a > b end)
-    for i, level in pairs(levels) do
-        local info = UIDropDownMenu_CreateInfo()
-        info.text = "Level " .. level
-        info.value = level
-        info.func = function (...)
-            self:UI_OnLevelSelect(...)
-        end
-        UIDropDownMenu_AddButton(info)
-    end
-end
-
-function XPMon:UI_OnLevelSelect(frame, arg1, arg2, checked)
-    if (not checked) then
-        UIDropDownMenu_SetSelectedValue(UIDROPDOWNMENU_OPEN_MENU, frame.value)
-    end
-    XPMon:UI_ShowLevelInformation(frame.value)
-end
-
-function XPMon:UI_OnShow(frame)
-    XPMon:log("Showing frame", frame)
-end
-
-function XPMon:UI_OnTabClick(frame, tab)
-    if frame.selectedTab then
-        _G["XPMonFrameTabContent" .. frame.selectedTab]:Hide()
-    end
-    _G["XPMonFrameTabContent" .. tab]:Show()
-    PanelTemplates_SetTab(frame, tab)
-end
-------------------------------------------------------
 -- Addon slash command handlers
 ------------------------------------------------------
 function XPMon:commandLEVEL(args)
@@ -262,11 +216,11 @@ function XPMon:commandTOTAL()
 end
 
 function XPMon:commandSHOW()
-    XPMonFrame:Show()
+    XPMonDetailsFrame:Show()
 end
 
 function XPMon:commandHIDE()
-    XPMonFrame:Hide()
+    XPMonDetailsFrame:Hide()
 end
 
 ------------------------------------------------------

@@ -1,12 +1,19 @@
 ## Interface: 50400
 ## Title: XPMon
-## Notes: What did you do to gain all that XP? Find out with XPMon
+## Notes: How on earth did you get all that XP? Find out with XPMon!
 ## Version: 0.0.1
 ## SavedVariablesPerCharacter: XPMon_DATA, XPMon_USER_CONFIG
 
+# Addon LUA
 XPMonUtils.lua
 XPEvent.lua
 XPMonFilters.lua
+
+XPMonBar.lua
+XPMonDetails.lua
 XPMon.lua
-XPMon.xml
+
+# Interface XML
 XPMonBar.xml
+XPMonDetails.xml
+XPMon.xml

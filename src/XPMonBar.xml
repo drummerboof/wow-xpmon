@@ -1,16 +1,15 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ../../FrameXML/UI.xsd">
-    <Script File="XPMon.lua"/>
+    <Script File="XPMonBar.lua"/>
 
-    <Frame name="XPMonBar"
+    <Frame name="XPMonBarFrame"
            toplevel="true"
            frameStrata="DIALOG"
            movable="true"
            enableMouse="true"
-           inherits="InsetFrameTemplate"
            hidden="false"
            parent="UIParent"
-           alpha="0.5">
+           alpha="0.8">
 
         <Size>
             <AbsDimension x="400" y="20"/>
@@ -20,19 +19,67 @@
         </Anchors>
 
         <Layers>
+            <Layer level="BORDER" textureSubLevel="-5">
+                <Texture name="$parentInsetTopLeftCorner" inherits="UI-Frame-InnerTopLeft" parentKey="InsetBorderTopLeft">
+                    <Anchors>
+                        <Anchor point="TOPLEFT"/>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentInsetTopRightCorner" inherits="UI-Frame-InnerTopRight" parentKey="InsetBorderTopRight">
+                    <Anchors>
+                        <Anchor point="TOPRIGHT"/>
+                    </Anchors>
+                </Texture>
 
+                <Texture name="$parentInsetBotLeftCorner" inherits="UI-Frame-InnerBotLeftCorner" parentKey="InsetBorderBottomLeft">
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" y="-1"/>
+                    </Anchors>
+                </Texture>
+
+                <Texture name="$parentInsetBotRightCorner" inherits="UI-Frame-InnerBotRight" parentKey="InsetBorderBottomRight">
+                    <Anchors>
+                        <Anchor point="BOTTOMRIGHT" y="-1"/>
+                    </Anchors>
+                </Texture>
+
+                <Texture name="$parentInsetTopBorder" inherits="_UI-Frame-InnerTopTile" parentKey="InsetBorderTop">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeTo="$parentInsetTopLeftCorner" relativePoint="TOPRIGHT"/>
+                        <Anchor point="TOPRIGHT" relativeTo="$parentInsetTopRightCorner" relativePoint="TOPLEFT"/>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentInsetBottomBorder" inherits="_UI-Frame-InnerBotTile" parentKey="InsetBorderBottom">
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" relativeTo="$parentInsetBotLeftCorner" relativePoint="BOTTOMRIGHT"/>
+                        <Anchor point="BOTTOMRIGHT" relativeTo="$parentInsetBotRightCorner" relativePoint="BOTTOMLEFT"/>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentInsetLeftBorder" inherits="!UI-Frame-InnerLeftTile" parentKey="InsetBorderLeft">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativeTo="$parentInsetTopLeftCorner" relativePoint="BOTTOMLEFT" x="0" y="0" />
+                        <Anchor point="BOTTOMLEFT" relativeTo="$parentInsetBotLeftCorner" relativePoint="TOPLEFT"/>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentInsetRightBorder" inherits="!UI-Frame-InnerRightTile" parentKey="InsetBorderRight">
+                    <Anchors>
+                        <Anchor point="TOPRIGHT" relativeTo="$parentInsetTopRightCorner" relativePoint="BOTTOMRIGHT"/>
+                        <Anchor point="BOTTOMRIGHT" relativeTo="$parentInsetBotRightCorner" relativePoint="TOPRIGHT"/>
+                    </Anchors>
+                </Texture>
+            </Layer>
         </Layers>
-
         <Frames>
 
         </Frames>
 
         <Scripts>
             <OnLoad>
+                XPMonBar:onLoad(self)
                 self:RegisterForDrag("LeftButton")
             </OnLoad>
             <OnEvent>
-                XPMon:onEvent(self, event, ...)
+                XPMonBar:onEvent(self, event, ...)
             </OnEvent>
             <OnDragStart>
                 if(button == "LeftButton") then
@@ -42,6 +89,12 @@
             <OnDragStop>
                 self:StopMovingOrSizing()
             </OnDragStop>
+            <OnShow>
+                XPMonBar:onShow(self)
+            </OnShow>
+            <OnHide>
+                XPMonBar:onHide(self)
+            </OnHide>
         </Scripts>
     </Frame>
 </Ui>
