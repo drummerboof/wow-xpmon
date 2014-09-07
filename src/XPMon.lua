@@ -6,7 +6,6 @@ XPMon = XPMon or {}
 
 XPMon.DEBUG = true
 XPMon.NAME = "XPMon"
-XPMon.LEVEL_CAP = 90
 XPMon.XP_GAIN_TIMEOUT = 5
 XPMon.COLOURS = {
     SYSTEM = "ffff00",
@@ -34,6 +33,10 @@ XPMon.currentXPRemaining = nil
 XPMon.currentLevel = nil
 
 function XPMon:onLoad(addon)
+    if UnitLevel("player") == GetMaxPlayerLevel() then
+        self:log("Max level - not regestering", key)
+        return
+    end
 
     -- XP related events to listen to
     for key, value in pairs(self.EVENTS_XP) do
@@ -61,6 +64,10 @@ function XPMon:onPlayerLogin(event)
 end
 
 function XPMon:onEvent(frame, event, ...)
+    if self.currentLevel == GetMaxPlayerLevel() then
+        return
+    end
+
     local xpGain
     -- XP related event here
     if self.EVENTS_XP[event] ~= nil then

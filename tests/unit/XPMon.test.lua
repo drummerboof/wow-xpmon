@@ -18,6 +18,8 @@ describe("XPMon Addon", function()
     setup(function()
         time = spy.new(function() return 100 end)
         GetPlayerMapPosition = spy.new(function() return 0.5454, 0.6565 end)
+        GetMaxPlayerLevel = spy.new(function() return 90 end)
+        UnitLevel = spy.new(function() return 10 end)
         assert:set_parameter("TableFormatLevel", 10)
         GetXPExhaustion = spy.new(function () return 100 end)
 
@@ -68,6 +70,20 @@ describe("XPMon Addon", function()
             assert.spy(mockAddon.RegisterEvent).was_called_with(mockAddon, "ADDON_LOADED")
             assert.spy(mockAddon.RegisterEvent).was_called_with(mockAddon, "PLAYER_LOGIN")
         end)
+
+        it("Doesn't register if the player is max level", function()
+            local mockAddon = {
+                RegisterEvent = spy.new(function() end)
+            }
+
+            UnitLevel = spy.new(function()
+                return 90
+            end)
+
+            XPMon:onLoad(mockAddon)
+
+            assert.spy(mockAddon.RegisterEvent).was_not_called()
+        end)
     end)
 
     describe("XPMon:onEvent", function()
@@ -111,6 +127,17 @@ describe("XPMon Addon", function()
             assert.spy(XPMon.filters.FILTER_1.handler).was.called_with("CHAT_MSG_COMBAT_XP_GAIN", "args")
             assert.spy(XPMon.filters.FILTER_2.handler).was_not_called()
             assert.spy(XPMon.filters.FILTER_3.handler).was_not_called()
+        end)
+
+        it("Returns if the player is max level", function()
+            XPMon.currentLevel = 90
+            XPMon:onEvent(nil, "CHAT_MSG_COMBAT_XP_GAIN", "args")
+            XPMon:onEvent(nil, "CHAT_MSG_SYSTEM", "args")
+            XPMon:onEvent(nil, "CHAT_MSG_OPENING", "args")
+            assert.spy(XPMon.filters.FILTER_1.handler).was_not_called()
+            assert.spy(XPMon.filters.FILTER_2.handler).was_not_called()
+            assert.spy(XPMon.filters.FILTER_3.handler).was_not_called()
+
         end)
     end)
 
