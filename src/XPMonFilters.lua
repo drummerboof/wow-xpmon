@@ -8,6 +8,7 @@ XPMon.SOURCE_PROFESSION = 4
 XPMon.SOURCE_PET_BATTLE = 5
 XPMon.SOURCE_EXPLORATION = 6
 XPMon.SOURCE_PVP = 7
+XPMon.SOURCE_CHEST = 8
 
 XPMon.SOURCES = {
     [XPMon.SOURCE_UNKNOWN] = "Unknown",
@@ -17,7 +18,8 @@ XPMon.SOURCES = {
     [XPMon.SOURCE_PROFESSION] = "Professions",
     [XPMon.SOURCE_PET_BATTLE] = "Pet Battles",
     [XPMon.SOURCE_EXPLORATION] = "Exploration",
-    [XPMon.SOURCE_PVP] = "PVP"
+    [XPMon.SOURCE_PVP] = "PVP",
+    [XPMon.SOURCE_CHEST] = "Chest"
 }
 
 function XPMon.combatXPGainInfo(msg)
@@ -159,6 +161,22 @@ XPMon.filters = {
                 result = XPEvent:new({
                     src = XPMon.SOURCE_PVP,
                     name = name or "Unknown"
+                })
+            end
+
+            return result
+        end
+    },
+    XP_CHEST = {
+        state = {},
+        events = { CHAT_MSG_COMBAT_XP_GAIN = true },
+        handler = function(event, data)
+            local result
+            local inInstance, instanceType = IsInInstance("player")
+            local s, e, exp = data:find("^You gain ([%d]+) experience.$")
+            if exp and instanceType ~= "pvp" then
+                result = XPEvent:new({
+                    src = XPMon.SOURCE_CHEST
                 })
             end
 

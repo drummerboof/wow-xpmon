@@ -193,7 +193,7 @@ describe("XPMon Addon", function()
 
             assert.stub(XPMonDataAccessor.addXPEventForLevel).was_called(1)
             assert.are.same({
-                src = "Unknown",
+                src = 0,
                 xp = 20,
                 r = true,
                 rxp = 0,
@@ -217,7 +217,7 @@ describe("XPMon Addon", function()
 
             assert.stub(XPMonDataAccessor.addXPEventForLevel).was_called(1)
             assert.are.same({
-                src = "Unknown",
+                src = 0,
                 xp = 20,
                 r = true,
                 rxp = 0,
@@ -337,7 +337,7 @@ describe("XPMon Addon", function()
 
             assert.stub(XPMonDataAccessor.addXPEventForLevel).was_called(2)
             assert.are.same({
-                src = "Unknown",
+                src = 0,
                 xp = 10,
                 r = true,
                 rxp = 0,
@@ -348,7 +348,7 @@ describe("XPMon Addon", function()
             }, XPMonDataAccessor.addXPEventForLevel.calls[1][4]:data())
             assert.are.equal(XPMonDataAccessor.addXPEventForLevel.calls[1][3], 10)
             assert.are.same({
-                src = "Unknown",
+                src = 0,
                 xp = 40,
                 r = true,
                 rxp = 0,

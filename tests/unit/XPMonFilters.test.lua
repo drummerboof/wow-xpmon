@@ -280,6 +280,28 @@ describe("XPMon Filters", function ()
 
     end)
 
+    describe("XP_CHEST", function ()
+
+        it("Listens for the correct events", function ()
+            assert.are.same(XPMon.filters.XP_CHEST.events, {
+                CHAT_MSG_COMBAT_XP_GAIN = true
+            })
+        end)
+
+        it("Captures XP events correctly", function ()
+            IsInInstance = spy.new(function () return nil, "" end)
+            local result = XPMon.filters.XP_CHEST.handler("CHAT_MSG_COMBAT_XP_GAIN", "You gain 2020 experience.")
+            assert.are.equal(XPMon.SOURCE_CHEST, result:get("src"))
+        end)
+
+        it("Ignores XP events when in PVP", function ()
+            IsInInstance = spy.new(function () return 1, "pvp" end)
+            local result = XPMon.filters.XP_CHEST.handler("CHAT_MSG_COMBAT_XP_GAIN", "You gain 2020 experience.")
+            assert.are.equal(nil, result)
+        end)
+
+    end)
+
     describe("XP_PET_BATTLE", function ()
 
         it("Listens for the correct events", function ()

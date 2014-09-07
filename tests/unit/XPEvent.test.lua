@@ -13,7 +13,7 @@ describe("XPEvent", function ()
         it("Creates a new XP event using defaults when no data given", function ()
             local event = XPEvent:new()
 
-            assert.are.equal("Unknown", event:data().src)
+            assert.are.equal(0, event:data().src)
             assert.are.equal(0, event:data().xp)
             assert.are.equal(0, event:data().rxp)
             assert.are.same({}, event:data().i)
