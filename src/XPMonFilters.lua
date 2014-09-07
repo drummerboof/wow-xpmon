@@ -1,5 +1,6 @@
 XPMon = XPMon or {}
 
+XPMon.SOURCE_UNKNOWN = 0
 XPMon.SOURCE_KILL = 1
 XPMon.SOURCE_QUEST = 2
 XPMon.SOURCE_DUNGEON = 3
@@ -9,6 +10,7 @@ XPMon.SOURCE_EXPLORATION = 6
 XPMon.SOURCE_PVP = 7
 
 XPMon.SOURCES = {
+    [XPMon.SOURCE_UNKNOWN] = "Unknown",
     [XPMon.SOURCE_KILL] = "Mob Kill",
     [XPMon.SOURCE_QUEST] = "Quests",
     [XPMon.SOURCE_DUNGEON] = "Dungeons",

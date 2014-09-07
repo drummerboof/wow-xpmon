@@ -6,7 +6,7 @@ XPEvent = {}
 
 function XPEvent:new(vars)
     local _defaults = {
-        src = "Unknown",
+        src = XPMon.SOURCE_UNKNOWN,
         xp = 0,
         rxp = 0,
         i = {}
