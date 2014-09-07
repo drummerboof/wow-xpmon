@@ -1,12 +1,22 @@
 XPMon = XPMon or {}
 
-XPMon.SOURCE_KILL = "Mob Kills"
-XPMon.SOURCE_QUEST = "Quests"
-XPMon.SOURCE_DUNGEON = "Dungeons"
-XPMon.SOURCE_PROFESSION = "Professions"
-XPMon.SOURCE_PET_BATTLE = "Pet Battles"
-XPMon.SOURCE_EXPLORATION = "Exploration"
-XPMon.SOURCE_PVP = "PVP"
+XPMon.SOURCE_KILL = 1
+XPMon.SOURCE_QUEST = 2
+XPMon.SOURCE_DUNGEON = 3
+XPMon.SOURCE_PROFESSION = 4
+XPMon.SOURCE_PET_BATTLE = 5
+XPMon.SOURCE_EXPLORATION = 6
+XPMon.SOURCE_PVP = 7
+
+XPMon.SOURCES = {
+    [XPMon.SOURCE_KILL] = "Mob Kill",
+    [XPMon.SOURCE_QUEST] = "Quests",
+    [XPMon.SOURCE_DUNGEON] = "Dungeons",
+    [XPMon.SOURCE_PROFESSION] = "Professions",
+    [XPMon.SOURCE_PET_BATTLE] = "Pet Battles",
+    [XPMon.SOURCE_EXPLORATION] = "Exploration",
+    [XPMon.SOURCE_PVP] = "PVP"
+}
 
 function XPMon.combatXPGainInfo(msg)
     local s, e, mob, exp, rested, group
@@ -35,8 +45,8 @@ XPMon.filters = {
                 if combatXPGain.mob then
                     result = XPEvent:new({
                         name = combatXPGain.mob,
-                        source = XPMon.SOURCE_KILL,
-                        restedBonus = tonumber(combatXPGain.rested or 0)
+                        src = XPMon.SOURCE_KILL,
+                        rxp = tonumber(combatXPGain.rested or 0)
                     })
                 end
             end
@@ -52,7 +62,7 @@ XPMon.filters = {
             if quest then
                 result = XPEvent:new({
                     name = quest,
-                    source = XPMon.SOURCE_QUEST
+                    src = XPMon.SOURCE_QUEST
                 })
             end
             return result
@@ -66,9 +76,9 @@ XPMon.filters = {
             local s, e, profession, material = data:find("^You perform (.+) on (.+).$")
             if profession and material then
                 result = XPEvent:new({
-                    key = profession,
+                    k = profession,
                     name = material,
-                    source = XPMon.SOURCE_PROFESSION
+                    src = XPMon.SOURCE_PROFESSION
                 })
             end
             return result
@@ -83,7 +93,7 @@ XPMon.filters = {
             if place and exp then
                 result = XPEvent:new({
                     name = place,
-                    source = XPMon.SOURCE_EXPLORATION
+                    src = XPMon.SOURCE_EXPLORATION
                 })
             end
             return result
@@ -105,14 +115,14 @@ XPMon.filters = {
                     if combatXPGain.mob then
                         result = XPEvent:new({
                             name = combatXPGain.mob,
-                            source = XPMon.SOURCE_DUNGEON,
-                            key = "kills",
-                            restedBonus = tonumber(combatXPGain.rested or 0),
-                            group = tonumber(combatXPGain.group or 0),
-                            details = {
-                                instance = name or "Unknown",
-                                type = instanceType or "Unknown",
-                                difficulty = difficultyName or "Unknown"
+                            src = XPMon.SOURCE_DUNGEON,
+                            k = "kills",
+                            rxp = tonumber(combatXPGain.rested or 0),
+                            gxp = tonumber(combatXPGain.group or 0),
+                            i = {
+                                i = name or "Unknown",
+                                t = instanceType or "Unknown",
+                                d = difficultyName or "Unknown"
                             }
                         })
                     end
@@ -123,11 +133,11 @@ XPMon.filters = {
 
                 result = XPEvent:new({
                     name = name or "Unknown",
-                    source = XPMon.SOURCE_DUNGEON,
-                    key = "rewards",
-                    details = {
-                        type = instanceType or "Unknown",
-                        difficulty = difficultyName or "Unknown"
+                    src = XPMon.SOURCE_DUNGEON,
+                    k = "rewards",
+                    i = {
+                        t = instanceType or "Unknown",
+                        d = difficultyName or "Unknown"
                     }
                 })
             end
@@ -145,7 +155,7 @@ XPMon.filters = {
             local name, infoInstanceType, difficultyID, difficultyName, maxPlayers, dynamicDifficulty, isDynamic, instanceMapID, instanceGroupSize = GetInstanceInfo()
             if exp and instanceType == "pvp" then
                 result = XPEvent:new({
-                    source = XPMon.SOURCE_PVP,
+                    src = XPMon.SOURCE_PVP,
                     name = name or "Unknown"
                 })
             end
@@ -161,12 +171,12 @@ XPMon.filters = {
             if data == 1 then
                 local opponentPetIndex = C_PetBattles.GetActivePet(2)
                 result = XPEvent:new({
-                    source = XPMon.SOURCE_PET_BATTLE,
+                    src = XPMon.SOURCE_PET_BATTLE,
                     name = C_PetBattles.GetName(2, opponentPetIndex),
-                    details = {
-                        opponent = {
-                            level = C_PetBattles.GetLevel(2, opponentPetIndex),
-                            wild = C_PetBattles.IsWildBattle()
+                    i = {
+                        o = { -- opponent
+                            l = C_PetBattles.GetLevel(2, opponentPetIndex), -- level
+                            w = C_PetBattles.IsWildBattle() -- wild
                         }
                     }
                 })

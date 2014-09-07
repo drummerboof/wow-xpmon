@@ -14,10 +14,10 @@ describe("XPMonDataAccessor", function ()
             end)
 
             XPMonDataAccessor:addXPEventForLevel(XPMon_DATA, 10, XPEvent:new({
-                source = "Quest",
-                experience = 200,
-                restedBonus = 0,
-                details = {
+                src = "Quest",
+                xp = 200,
+                rxp = 0,
+                i = {
                     quest = "A quest"
                 }
             }))
@@ -32,10 +32,10 @@ describe("XPMonDataAccessor", function ()
                             total = 200,
                             events = {
                                 {
-                                    time = 100,
-                                    experience = 200,
-                                    restedBonus = 0,
-                                    details = {
+                                    t = 100,
+                                    xp = 200,
+                                    rxp = 0,
+                                    i = {
                                         quest = "A quest"
                                     }
                                 }
@@ -46,10 +46,10 @@ describe("XPMonDataAccessor", function ()
             }, XPMon_DATA)
 
             XPMonDataAccessor:addXPEventForLevel(XPMon_DATA, 10, XPEvent:new({
-                source = "Mob Kill",
-                experience = 50,
-                restedBonus = 25,
-                details = {
+                src = "Mob Kill",
+                xp = 50,
+                rxp = 25,
+                i = {
                     quest = "A mob"
                 }
             }))
@@ -64,10 +64,10 @@ describe("XPMonDataAccessor", function ()
                             total = 200,
                             events = {
                                 {
-                                    time = 100,
-                                    experience = 200,
-                                    restedBonus = 0,
-                                    details = {
+                                    t = 100,
+                                    xp = 200,
+                                    rxp = 0,
+                                    i = {
                                         quest = "A quest"
                                     }
                                 }
@@ -78,10 +78,10 @@ describe("XPMonDataAccessor", function ()
                             total = 50,
                             events = {
                                 {
-                                    time = 100,
-                                    experience = 50,
-                                    restedBonus = 25,
-                                    details = {
+                                    t = 100,
+                                    xp = 50,
+                                    rxp = 25,
+                                    i = {
                                         quest = "A mob"
                                     }
                                 }
@@ -92,10 +92,10 @@ describe("XPMonDataAccessor", function ()
             }, XPMon_DATA)
 
             XPMonDataAccessor:addXPEventForLevel(XPMon_DATA, 10, XPEvent:new({
-                source = "Mob Kill",
-                experience = 100,
-                restedBonus = 50,
-                details = {
+                src = "Mob Kill",
+                xp = 100,
+                rxp = 50,
+                i = {
                     quest = "Another mob"
                 }
             }))
@@ -110,10 +110,10 @@ describe("XPMonDataAccessor", function ()
                             total = 200,
                             events = {
                                 {
-                                    time = 100,
-                                    experience = 200,
-                                    restedBonus = 0,
-                                    details = {
+                                    t = 100,
+                                    xp = 200,
+                                    rxp = 0,
+                                    i = {
                                         quest = "A quest"
                                     }
                                 }
@@ -124,18 +124,18 @@ describe("XPMonDataAccessor", function ()
                             total = 150,
                             events = {
                                 {
-                                    time = 100,
-                                    experience = 50,
-                                    restedBonus = 25,
-                                    details = {
+                                    t = 100,
+                                    xp = 50,
+                                    rxp = 25,
+                                    i = {
                                         quest = "A mob"
                                     }
                                 },
                                 {
-                                    time = 100,
-                                    experience = 100,
-                                    restedBonus = 50,
-                                    details = {
+                                    t = 100,
+                                    xp = 100,
+                                    rxp = 50,
+                                    i = {
                                         quest = "Another mob"
                                     }
                                 }
@@ -148,6 +148,40 @@ describe("XPMonDataAccessor", function ()
             UnitXPMax:revert()
         end)
 
+        it("Correctly saves the XP event stripping i if empty", function()
+            XPMon_DATA = {}
+            UnitXPMax = spy.new(function()
+                return 2500
+            end)
+
+            XPMonDataAccessor:addXPEventForLevel(XPMon_DATA, 10, XPEvent:new({
+                src = "Quest",
+                xp = 200,
+                rxp = 0,
+                i = {}
+            }))
+
+            assert.are.same({
+                [10] = {
+                    total = 200,
+                    max = 2500,
+                    data = {
+                        Quest = {
+                            keys = {},
+                            total = 200,
+                            events = {
+                                {
+                                    t = 100,
+                                    xp = 200,
+                                    rxp = 0
+                                }
+                            }
+                        }
+                    }
+                }
+            }, XPMon_DATA)
+        end)
+
         it("Saves XP events under the key if provided", function()
             XPMon_DATA = {}
             UnitXPMax = spy.new(function()
@@ -155,30 +189,30 @@ describe("XPMonDataAccessor", function ()
             end)
 
             XPMonDataAccessor:addXPEventForLevel(XPMon_DATA, 10, XPEvent:new({
-                source = "Quest",
-                experience = 200,
-                restedBonus = 0,
-                details = {
+                src = "Quest",
+                xp = 200,
+                rxp = 0,
+                i = {
                     anything = "here"
                 }
             }))
 
             XPMonDataAccessor:addXPEventForLevel(XPMon_DATA, 10, XPEvent:new({
-                source = "Dungeons",
-                key = "rewards",
-                experience = 200,
-                restedBonus = 0,
-                details = {
+                src = "Dungeons",
+                k = "rewards",
+                xp = 200,
+                rxp = 0,
+                i = {
                     anything = "here"
                 }
             }))
 
             XPMonDataAccessor:addXPEventForLevel(XPMon_DATA, 10, XPEvent:new({
-                source = "Dungeons",
-                key = "kills",
-                experience = 100,
-                restedBonus = 50,
-                details = {
+                src = "Dungeons",
+                k = "kills",
+                xp = 100,
+                rxp = 50,
+                i = {
                     anything = "here"
                 }
             }))
@@ -193,10 +227,10 @@ describe("XPMonDataAccessor", function ()
                             keys = {},
                             events = {
                                 {
-                                    time = 100,
-                                    experience = 200,
-                                    restedBonus = 0,
-                                    details = {
+                                    t = 100,
+                                    xp = 200,
+                                    rxp = 0,
+                                    i = {
                                         anything = "here"
                                     }
                                 }
@@ -208,20 +242,20 @@ describe("XPMonDataAccessor", function ()
                             events = {
                                 rewards = {
                                     {
-                                        time = 100,
-                                        experience = 200,
-                                        restedBonus = 0,
-                                        details = {
+                                        t = 100,
+                                        xp = 200,
+                                        rxp = 0,
+                                        i = {
                                             anything = "here"
                                         }
                                     }
                                 },
                                 kills = {
                                     {
-                                        time = 100,
-                                        experience = 100,
-                                        restedBonus = 50,
-                                        details = {
+                                        t = 100,
+                                        xp = 100,
+                                        rxp = 50,
+                                        i = {
                                             anything = "here"
                                         }
                                     }

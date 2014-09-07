@@ -6,8 +6,8 @@ XPMonDataAccessor = {}
 --
 function XPMonDataAccessor:addXPEventForLevel(store, level, event)
     local insert
-    local source = event:get("source")
-    event:unset("source")
+    local source = event:get("src")
+    event:unset("src")
 
     if store[level] == nil then
         store[level] = {
@@ -24,17 +24,20 @@ function XPMonDataAccessor:addXPEventForLevel(store, level, event)
         }
     end
     insert = store[level].data[source].events
-    if event:get("key") then
-        if store[level].data[source].keys[event:get("key")] == nil then
-            store[level].data[source].keys[event:get("key")] = true
-            store[level].data[source].events[event:get("key")] = {}
+    if event:get("k") then
+        if store[level].data[source].keys[event:get("k")] == nil then
+            store[level].data[source].keys[event:get("k")] = true
+            store[level].data[source].events[event:get("k")] = {}
         end
-        insert = store[level].data[source].events[event:get("key")]
-        event:unset("key")
+        insert = store[level].data[source].events[event:get("k")]
+        event:unset("k")
+    end
+    if next(event:get("i")) == nil then
+        event:unset("i")
     end
     table.insert(insert, event:data())
-    store[level].total = store[level].total + event:get("experience")
-    store[level].data[source].total = store[level].data[source].total + event:get("experience")
+    store[level].total = store[level].total + event:get("xp")
+    store[level].data[source].total = store[level].data[source].total + event:get("xp")
 end
 
 function XPMonDataAccessor:getTotalsForLevel(store, level)

@@ -6,10 +6,10 @@ XPEvent = {}
 
 function XPEvent:new(vars)
     local _defaults = {
-        source = "Unknown",
-        experience = 0,
-        restedBonus = 0,
-        details = {}
+        src = "Unknown",
+        xp = 0,
+        rxp = 0,
+        i = {}
     }
     local instance = {
         _data = XPMonUtil.deepcopy(vars) or {}
@@ -21,7 +21,7 @@ function XPEvent:new(vars)
             instance:set(k, v)
         end
     end
-    instance:set("time", time())
+    instance:set("t", time())
     return instance
 end
 

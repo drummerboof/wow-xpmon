@@ -19,6 +19,7 @@ XPMon.EVENTS_XP = {
     CHAT_MSG_COMBAT_XP_GAIN = true,
     CHAT_MSG_OPENING = true,
     LFG_COMPLETION_REWARD = true,
+    QUEST_TURNED_IN = true,
     PET_BATTLE_FINAL_ROUND = true
 }
 XPMon.EVENT_HANDLERS = {
@@ -27,9 +28,9 @@ XPMon.EVENT_HANDLERS = {
     PLAYER_LOGIN = "onPlayerLogin"
 }
 
-XPMon.nextXPGain = nil
+XPMon.nextXPGains = {}
 XPMon.currentXP = nil
-XPMon.currentXPRested = 100
+XPMon.currentXPRested = 0
 XPMon.currentXPRemaining = nil
 XPMon.currentLevel = nil
 
@@ -69,7 +70,7 @@ function XPMon:onEvent(frame, event, ...)
                 xpGain = value.handler(event, ...)
             end
             if xpGain ~= nil then
-                self.nextXPGain = xpGain
+                table.insert(self.nextXPGains, xpGain)
                 break
             end
         end
@@ -83,59 +84,74 @@ function XPMon:onEvent(frame, event, ...)
 end
 
 function XPMon:onPlayerXPUpdate()
+    self:log("Player XP update!")
+
+    if (table.getn(self.nextXPGains) == 0) then
+        self:handleXPGain(nil)
+    else
+        local xpGain = table.remove(self.nextXPGains, 1)
+        while xpGain do
+            self:handleXPGain(xpGain)
+            xpGain = table.remove(self.nextXPGains, 1)
+        end
+    end
+end
+
+function XPMon:handleXPGain(xpGain)
+
     -- Check that the xpEvent we have registered didn't happen too long ago to
     -- avoid logging XP data against the wrong event, better it is logged as Unknown
-    if self.nextXPGain and self.nextXPGain:get("time") > 0 then
-        if time() - self.nextXPGain:get("time") > self.XP_GAIN_TIMEOUT then
+    if xpGain and xpGain:get("t") > 0 then
+        if time() - xpGain:get("t") > self.XP_GAIN_TIMEOUT then
             self:log("XPEvent too old, ignoring")
-            self.nextXPGain = nil
+            xpGain = nil
         end
     end
 
-    self:log("Player XP update!")
-
-    local x, y = GetPlayerMapPosition("player")
     local xpEventPrevLevel, xpEventCurrentLevel
 
-    xpEventCurrentLevel = self.nextXPGain or XPEvent:new()
-    xpEventCurrentLevel:set("zone", GetRealZoneText())
-    xpEventCurrentLevel:set("rested", self.currentXPRested > 0)
-    xpEventCurrentLevel:set("position", {
-        x = XPMonUtil.round(x * 100, 2),
-        y = XPMonUtil.round(y * 100, 2)
-    })
-
-    self:log(" - remaining XP:", self.currentXPRemaining)
+    xpEventCurrentLevel = self:createXPEvent(xpGain)
 
     if UnitLevel("player") > self.currentLevel then
         xpEventPrevLevel = XPEvent:new(xpEventCurrentLevel:data())
-        xpEventPrevLevel:set("experience", self.currentXPRemaining)
+        xpEventPrevLevel:set("xp", self.currentXPRemaining)
 
-        xpEventCurrentLevel:set("experience", UnitXP("player"))
+        xpEventCurrentLevel:set("xp", UnitXP("player"))
 
-        if xpEventCurrentLevel:get("restedBonus") > 0 then
-            xpEventPrevLevel:set("restedBonus", math.max(0, xpEventPrevLevel:get("experience") - xpEventPrevLevel:get("restedBonus")))
-            xpEventCurrentLevel:set("restedBonus", xpEventCurrentLevel:get("restedBonus") - xpEventPrevLevel:get("restedBonus"))
+        if xpEventCurrentLevel:get("rxp") > 0 then
+            xpEventPrevLevel:set("rxp", math.max(0, xpEventPrevLevel:get("xp") - xpEventPrevLevel:get("rxp")))
+            xpEventCurrentLevel:set("rxp", xpEventCurrentLevel:get("rxp") - xpEventPrevLevel:get("rxp"))
         end
 
-        XPMon:log("Saving XP event for previous level: ", xpEventPrevLevel:get("source"), xpEventPrevLevel:get("experience"), xpEventPrevLevel:get("restedBonus"))
+        XPMon:log("Saving XP event for previous level: ", xpEventPrevLevel:get("src"), xpEventPrevLevel:get("xp"), xpEventPrevLevel:get("rxp"))
         XPMonDataAccessor:addXPEventForLevel(XPMon_DATA, self.currentLevel, xpEventPrevLevel)
     else
-        xpEventCurrentLevel:set("experience", UnitXP("player") - self.currentXP)
+        xpEventCurrentLevel:set("xp", UnitXP("player") - self.currentXP)
     end
 
-    XPMon:log("Saving XP event for current level: ", xpEventCurrentLevel:get("source"), xpEventCurrentLevel:get("experience"), xpEventCurrentLevel:get("restedBonus"))
+    XPMon:log("Saving XP event for current level: ", xpEventCurrentLevel:get("src"), xpEventCurrentLevel:get("xp"), xpEventCurrentLevel:get("rxp"))
     XPMonDataAccessor:addXPEventForLevel(XPMon_DATA, UnitLevel("player"), xpEventCurrentLevel)
 
     XPMon:setCurrentPlayerInfo()
 end
 
+function XPMon:createXPEvent(originalEvent)
+    local x, y = GetPlayerMapPosition("player")
+    local xpEvent = originalEvent or XPEvent:new()
+    xpEvent:set("z", GetRealZoneText())
+    xpEvent:set("r", self.currentXPRested > 0)
+    xpEvent:set("p", {
+        x = XPMonUtil.round(x * 100, 2),
+        y = XPMonUtil.round(y * 100, 2)
+    })
+    return xpEvent
+end
+
 function XPMon:setCurrentPlayerInfo()
     self.currentXP = UnitXP("player")
-    self.currentXPRested = GetXPExhaustion("player")
+    self.currentXPRested = GetXPExhaustion("player") or 0
     self.currentXPRemaining = UnitXPMax("player") - self.currentXP
     self.currentLevel = UnitLevel("player")
-    self.nextXPGain = nil
     self:log("Setting player info", self.currentXP, self.currentXPRemaining)
 end
 
@@ -167,7 +183,7 @@ function XPMon:commandLEVEL(args)
         local xp = level == UnitLevel("player") and self.currentXP or data.max
         XPMonUtil.print("XPMon: stats for level " .. level, XPMon.COLOURS.SYSTEM)
         for i, item in pairs(totals) do
-            XPMonUtil.print(item.type .. ": " .. item.total .. " (" .. string.format("%.1f", (item.total / xp * 100)) .. "%)", XPMon.COLOURS.DATA, 1)
+            XPMonUtil.print(XPMon.SOURCES[item.type] .. ": " .. item.total .. " (" .. string.format("%.1f", (item.total / xp * 100)) .. "%)", XPMon.COLOURS.DATA, 1)
         end
         if data.total < xp then
             XPMonUtil.print("Uncaptured: " .. (xp - data.total) .. " (" .. string.format("%.1f", ((xp - data.total) / xp * 100)) .. "%)", XPMon.COLOURS.KNOCKBACK, 1)
@@ -197,7 +213,7 @@ end
 SlashCmdList = SlashCmdList or {}
 
 -- Slash commands
-SLASH_XPMON1 = '/xpmon'
+SLASH_XPMON1 = "/xpmon"
 
 -- XPMon saved data
 XPMon_DATA = XPMon_DATA or {}
